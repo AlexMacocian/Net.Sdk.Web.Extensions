@@ -1,7 +1,7 @@
 ﻿using System.Core.Extensions;
 using System.Extensions;
 
-namespace AspNetCore.Extensions.Middleware;
+namespace Net.Sdk.Web.Middleware;
 
 public sealed class HeaderLoggingMiddleware : IMiddleware
 {

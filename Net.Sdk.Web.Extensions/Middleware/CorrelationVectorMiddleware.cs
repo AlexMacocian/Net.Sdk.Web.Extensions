@@ -1,9 +1,9 @@
-﻿using AspNetCore.Extensions.Options;
+﻿using Net.Sdk.Web.Options;
 using Microsoft.CorrelationVector;
 using Microsoft.Extensions.Options;
 using System.Core.Extensions;
 
-namespace AspNetCore.Extensions.Middleware;
+namespace Net.Sdk.Web.Middleware;
 
 public sealed class CorrelationVectorMiddleware : IMiddleware
 {

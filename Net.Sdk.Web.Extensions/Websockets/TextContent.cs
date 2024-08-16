@@ -1,6 +1,6 @@
-﻿using AspNetCore.Extensions.Websockets.Converters;
+﻿using Net.Sdk.Web.Websockets.Converters;
 
-namespace AspNetCore.Extensions.Websockets;
+namespace Net.Sdk.Web.Websockets;
 
 [WebSocketConverter<TextWebSocketMessageConverter, TextContent>]
 public sealed class TextContent

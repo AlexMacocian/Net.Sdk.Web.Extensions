@@ -1,10 +1,10 @@
-﻿using AspNetCore.Extensions.Attributes;
-using AspNetCore.Extensions.Middleware;
+﻿using Net.Sdk.Web.Attributes;
+using Net.Sdk.Web.Middleware;
 using Net.Sdk.Web.Extensions.Http;
 using System.Core.Extensions;
 using System.Extensions;
 
-namespace AspNetCore.Extensions;
+namespace Net.Sdk.Web;
 
 public static class WebApplicationBuilderExtensions
 {

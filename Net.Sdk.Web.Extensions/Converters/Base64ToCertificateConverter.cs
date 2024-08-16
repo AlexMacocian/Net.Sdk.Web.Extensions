@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AspNetCore.Extensions.Websockets.Converters;
+namespace Net.Sdk.Web.Websockets.Converters;
 
 public sealed class Base64ToCertificateConverter : JsonConverter<X509Certificate2>
 {

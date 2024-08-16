@@ -1,4 +1,4 @@
-﻿using AspNetCore.Extensions.Middleware;
+﻿using Net.Sdk.Web.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Extensions;
 using System.Net.WebSockets;
 
-namespace AspNetCore.Extensions.Websockets.Extensions;
+namespace Net.Sdk.Web.Websockets.Extensions;
 
 public static class WebApplicationExtensions
 {

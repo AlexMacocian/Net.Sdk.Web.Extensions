@@ -1,7 +1,7 @@
 ﻿using Microsoft.CorrelationVector;
 using System.Core.Extensions;
 
-namespace AspNetCore.Extensions;
+namespace Net.Sdk.Web;
 
 public static class HttpContextExtensions
 {

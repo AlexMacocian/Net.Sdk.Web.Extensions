@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace AspNetCore.Extensions;
+namespace Net.Sdk.Web;
 
 public class ForbiddenResponseActionResult : IActionResult
 {

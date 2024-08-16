@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace AspNetCore.Extensions.Websockets.Converters;
+namespace Net.Sdk.Web.Websockets.Converters;
 
 public sealed class TextWebSocketMessageConverter : WebSocketMessageConverter<TextContent>
 {

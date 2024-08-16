@@ -1,4 +1,4 @@
-﻿namespace AspNetCore.Extensions.Options;
+﻿namespace Net.Sdk.Web.Options;
 
 public sealed class CorrelationVectorOptions
 {

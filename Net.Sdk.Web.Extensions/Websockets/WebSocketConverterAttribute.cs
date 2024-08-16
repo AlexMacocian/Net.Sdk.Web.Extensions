@@ -1,4 +1,4 @@
-﻿namespace AspNetCore.Extensions.Websockets;
+﻿namespace Net.Sdk.Web.Websockets;
 
 public abstract class WebSocketConverterAttributeBase : Attribute
 {

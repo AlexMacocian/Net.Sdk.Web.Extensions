@@ -1,9 +1,9 @@
-﻿using AspNetCore.Extensions.Attributes;
+﻿using Net.Sdk.Web.Attributes;
 using System.Core.Extensions;
 using System.Text;
 using System.Text.Json;
 
-namespace AspNetCore.Extensions.Websockets.Converters;
+namespace Net.Sdk.Web.Websockets.Converters;
 
 public class JsonWebSocketMessageConverter<T> : WebSocketMessageConverter<T>
 {

@@ -1,5 +1,4 @@
-﻿using AspNetCore.Extensions;
-using AspNetCore.Extensions.Options;
+﻿using Net.Sdk.Web.Options;
 using Microsoft.CorrelationVector;
 using Microsoft.Extensions.Options;
 using System.Core.Extensions;

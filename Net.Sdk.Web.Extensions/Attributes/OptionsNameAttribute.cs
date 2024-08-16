@@ -1,4 +1,4 @@
-﻿namespace AspNetCore.Extensions.Attributes;
+﻿namespace Net.Sdk.Web.Attributes;
 
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class OptionsNameAttribute : Attribute

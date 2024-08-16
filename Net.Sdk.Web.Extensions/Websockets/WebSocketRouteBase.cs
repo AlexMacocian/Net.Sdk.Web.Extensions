@@ -1,11 +1,8 @@
-﻿using AspNetCore.Extensions.Attributes;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Net.Sdk.Web.Attributes;
 using System.Extensions;
 using System.Net.WebSockets;
 
-namespace AspNetCore.Extensions.Websockets;
+namespace Net.Sdk.Web.Websockets;
 
 public abstract class WebSocketRouteBase
 {

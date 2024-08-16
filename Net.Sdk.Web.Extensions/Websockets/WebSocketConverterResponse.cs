@@ -1,6 +1,6 @@
 ﻿using System.Net.WebSockets;
 
-namespace AspNetCore.Extensions.Websockets;
+namespace Net.Sdk.Web.Websockets;
 
 public sealed class WebSocketConverterResponse
 {
