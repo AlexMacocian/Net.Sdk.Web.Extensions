@@ -19,6 +19,14 @@ public static class WebApplicationExtensions
         return webApplication;
     }
 
+    public static WebApplication UseIPExtraction(this WebApplication webApplication)
+    {
+        webApplication.ThrowIfNull()
+            .UseMiddleware<IPExtractingMiddleware>();
+
+        return webApplication;
+    }
+
     public static WebApplication MapWebSocket<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(this WebApplication app, string route)
         where TWebSocketRoute : WebSocketRouteBase
     {

@@ -31,14 +31,22 @@ public static class WebApplicationBuilderExtensions
         return builder;
     }
 
-    public static Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T> RegisterHttpClient<T>(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder WithIPExtraction(this WebApplicationBuilder builder)
+    {
+        builder.ThrowIfNull();
+        builder.Services.AddScoped<IPExtractingMiddleware>();
+
+        return builder;
+    }
+
+    public static Extensions.Http.HttpClientBuilder<T> RegisterHttpClient<T>(this WebApplicationBuilder builder)
         where T : class
     {
         _ = builder.ThrowIfNull();
-        return new Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T>(builder);
+        return new Extensions.Http.HttpClientBuilder<T>(builder);
     }
 
-    public static Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T> WithCorrelationVector<T>(this Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T> httpClientBuilder)
+    public static Extensions.Http.HttpClientBuilder<T> WithCorrelationVector<T>(this Extensions.Http.HttpClientBuilder<T> httpClientBuilder)
         where T : class
     {
         return httpClientBuilder.ThrowIfNull()
