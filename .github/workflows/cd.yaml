@@ -1,9 +1,12 @@
-name:  AspNetCore.Extensions CD Pipeline
+name:  Net.Sdk.Web.Extensions CD Pipeline
 
 on:
   push:
     branches:
       - master
+    paths:
+      - Net.Sdk.Web.Extensions/**
+      - ".github/workflows/cd.yaml"
 
 jobs:
 

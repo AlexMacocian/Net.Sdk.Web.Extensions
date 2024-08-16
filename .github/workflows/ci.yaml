@@ -1,9 +1,12 @@
-name:  AspNetCore.Extensions CI Pipeline
+name:  Net.Sdk.Web.Extensions CI Pipeline
 
 on:
   pull_request:
     branches:
       - master
+    paths:
+      - Net.Sdk.Web.Extensions/**
+      - ".github/workflows/ci.yaml"
 
 jobs:
 
