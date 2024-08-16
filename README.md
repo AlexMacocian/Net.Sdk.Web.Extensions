@@ -57,6 +57,14 @@ public class CustomRoute : WebSocketRouteBase<CustomRequest, CustomResponse>
 }
 ```
 
+### Support for `IActionFilter`
+Decorate your `CustomRoute` with filters that get executed the same way as in a AspNetCore web app
+Both `IActionFilter` and `IAsyncActionFilter` are supported
+```C#
+[ServiceFilter<CustomFilter>]
+public class CustomRoute : WebSocketRouteBase<CustomRequest, CustomResponse>
+```
+
 ### Custom message converters
 If you need specialized converters, implement your own `WebSocketMessageConverter<T>`
 
