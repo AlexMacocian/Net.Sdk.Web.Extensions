@@ -17,8 +17,8 @@ jobs:
 
     env:
       Configuration: Release
-      Solution_Path: AspNetCore.Extensions.sln
-      Source_Project_Path: AspNetCore.Extensions\AspNetCore.Extensions.csproj
+      Solution_Path: Net.Sdk.Web.Extensions.sln
+      Source_Project_Path: Net.Sdk.Web.Extensions\Net.Sdk.Web.Extensions.csproj
       Actions_Allow_Unsecure_Commands: true
 
     steps:
