@@ -10,7 +10,7 @@
     <Authors>Alexandru Macocian</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <RepositoryUrl>https://github.com/AlexMacocian/AspNetCore.Extensions</RepositoryUrl>
+    <RepositoryUrl>https://github.com/AlexMacocian/Net.Sdk.Web.Extensions</RepositoryUrl>
     <Description>Extensions for Microsoft.NET.Sdk.Web</Description>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
