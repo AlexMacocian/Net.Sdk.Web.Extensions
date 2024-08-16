@@ -1,4 +1,6 @@
 ﻿using AspNetCore.Extensions.Attributes;
+using AspNetCore.Extensions.Middleware;
+using Net.Sdk.Web.Extensions.Http;
 using System.Core.Extensions;
 using System.Extensions;
 
@@ -18,6 +20,36 @@ public static class WebApplicationBuilderExtensions
     {
         configurationManager.ThrowIfNull();
         return configurationManager.GetRequiredSection(GetOptionsName<TOptions>());
+    }
+
+    public static WebApplicationBuilder WithCorrelationVector(this WebApplicationBuilder builder)
+    {
+        builder.ThrowIfNull();
+        builder.Services.AddScoped<CorrelationVectorMiddleware>();
+        builder.Services.AddScoped<CorrelationVectorHandler>();
+
+        return builder;
+    }
+
+    public static Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T> RegisterHttpClient<T>(this WebApplicationBuilder builder)
+        where T : class
+    {
+        _ = builder.ThrowIfNull();
+        return new Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T>(builder);
+    }
+
+    public static Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T> WithCorrelationVector<T>(this Net.Sdk.Web.Extensions.Http.HttpClientBuilder<T> httpClientBuilder)
+        where T : class
+    {
+        return httpClientBuilder.ThrowIfNull()
+            .WithDelegatingHandler(sp => sp.GetRequiredService<CorrelationVectorHandler>());
+    }
+
+    public static IHttpClientBuilder WithCorrelationVector<T>(this IHttpClientBuilder httpClientBuilder)
+        where T : class
+    {
+        return httpClientBuilder.ThrowIfNull()
+            .AddHttpMessageHandler<CorrelationVectorHandler>();
     }
 
     private static string GetOptionsName<TOptions>()

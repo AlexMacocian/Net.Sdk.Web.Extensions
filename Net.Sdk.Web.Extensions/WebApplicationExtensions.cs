@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AspNetCore.Extensions.Middleware;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Core.Extensions;
@@ -10,6 +11,14 @@ namespace AspNetCore.Extensions.Websockets.Extensions;
 
 public static class WebApplicationExtensions
 {
+    public static WebApplication UseCorrelationVector(this WebApplication webApplication)
+    {
+        webApplication.ThrowIfNull()
+            .UseMiddleware<CorrelationVectorMiddleware>();
+
+        return webApplication;
+    }
+
     public static WebApplication MapWebSocket<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(this WebApplication app, string route)
         where TWebSocketRoute : WebSocketRouteBase
     {
