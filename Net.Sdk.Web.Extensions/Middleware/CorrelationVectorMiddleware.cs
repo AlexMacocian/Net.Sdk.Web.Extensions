@@ -18,7 +18,7 @@ public sealed class CorrelationVectorMiddleware : IMiddleware
         this.options = options.ThrowIfNull().Value.ThrowIfNull();
     }
 
-    public Task InvokeAsync(HttpContext context, RequestDelegate next)
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var cv = new CorrelationVector();
         if (context.Items.TryGetValue(this.options.Header, out var correlationVectorVal) &&
@@ -29,6 +29,8 @@ public sealed class CorrelationVectorMiddleware : IMiddleware
         }
 
         context.SetCorrelationVector(cv);
-        return next(context);
+        await next(context);
+
+        context.Response.Headers.Append(this.options.Header, context.GetCorrelationVector().ToString());
     }
 }
