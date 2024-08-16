@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - Net.Sdk.Web.Extensions/**
+      - Net.Sdk.Web.Extensions.Azure/**
       - ".github/workflows/cd.yaml"
 
 jobs:
@@ -22,6 +23,7 @@ jobs:
       Configuration: Release
       Solution_Path: Net.Sdk.Web.Extensions.sln
       Source_Project_Path: Net.Sdk.Web.Extensions\Net.Sdk.Web.Extensions.csproj
+      Azure_Project_path: Net.Sdk.Web.Extensions.Azure\Net.Sdk.Web.Extensions.Azure.csproj
       Actions_Allow_Unsecure_Commands: true
 
     steps:
@@ -43,11 +45,17 @@ jobs:
       env:
         RuntimeIdentifier: win-${{ matrix.targetplatform }}
 
-    - name: Build AspNetCore.Extensions.NetStandard project
+    - name: Build Net.Sdk.Extensions project
       run: dotnet build $env:Source_Project_Path -c $env:Configuration
 
-    - name: Package AspNetCore.Extensions.NetStandard
+    - name: Package Net.Sdk.Extensions
       run: dotnet pack -c Release -o . $env:Source_Project_Path
+
+    - name: Build Net.Sdk.Extensions.Azure project
+      run: dotnet build $env:Azure_Project_Path -c $env:Configuration
+
+    - name: Package Net.Sdk.Extensions.Azure
+      run: dotnet pack -c Release -o . $env:Azure_Project_Path
 
     - name: Publish
       run: dotnet nuget push *.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
