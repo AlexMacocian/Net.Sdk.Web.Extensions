@@ -29,8 +29,7 @@ public sealed class CorrelationVectorMiddleware : IMiddleware
         }
 
         context.SetCorrelationVector(cv);
-        await next(context);
-
         context.Response.Headers.Append(this.options.Header, context.GetCorrelationVector().ToString());
+        await next(context);
     }
 }
