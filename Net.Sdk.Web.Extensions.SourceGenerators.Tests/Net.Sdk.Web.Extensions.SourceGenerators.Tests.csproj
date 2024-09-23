@@ -13,7 +13,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
-    <PackageReference Include="Net.Sdk.Web.Extensions.SourceGenerators" Version="0.1.19" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Net.Sdk.Web.Extensions.SourceGenerators\Net.Sdk.Web.Extensions.SourceGenerators.csproj" />
   </ItemGroup>
 
 </Project>
