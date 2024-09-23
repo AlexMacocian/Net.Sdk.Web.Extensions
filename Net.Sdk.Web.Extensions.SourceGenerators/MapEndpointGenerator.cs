@@ -79,7 +79,7 @@ public class MapEndpointGenerator : IIncrementalGenerator
                 .WithThisParameter(Constants.WebApplicationTypeName, Constants.BuilderParameterName)
                 .WithModifiers($"{Constants.Public} {Constants.Static}");
 
-        var useRoutesMethodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, Constants.UseRoutesMethodName)
+        var useRoutesMethodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, Constants.MapAllRoutes)
                 .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
                 .WithModifiers($"{Constants.Public} {Constants.Static}");
         var useRoutesBody = new StringBuilder();

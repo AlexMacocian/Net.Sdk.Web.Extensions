@@ -70,6 +70,7 @@ public static class Constants
 
     public const string PatternPropertyName = "Pattern";
 
+    public const string MapAllRoutes = "MapAllRoutes";
     public const string UseRoutesMethodName = "UseRoutes";
     public const string EndpointRouteBuilderExtensionsName = "EndpointRouteBuilderExtensions";
     public const string IEndpointRouteBuilderTypeName = "IEndpointRouteBuilder";
