@@ -75,6 +75,8 @@ public static class Constants
     public const string IEndpointRouteBuilderTypeName = "IEndpointRouteBuilder";
     public const string WebApplicationBuilderExtensionsName = "WebApplicationBuilderExtension";
     public const string WebApplicationBuilderTypeName = "WebApplicationBuilder";
+    public const string WebApplicationExtensionsName = "WebApplicationExtensions";
+    public const string WebApplicationTypeName = "WebApplication";
     public const string WithRoutesName = "WithRoutes";
     public const string BuilderParameterName = "builder";
 
