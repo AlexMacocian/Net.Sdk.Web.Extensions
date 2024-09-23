@@ -5,7 +5,6 @@ using Sybil;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -72,7 +71,13 @@ public class MapEndpointGenerator : IIncrementalGenerator
             .WithModifiers($"{Constants.Public} {Constants.Static}");
         namespaceBuilder.WithClass(extensionClassBuilder);
 
-        foreach(var classDeclarationSyntax in classes)
+        var useRoutesMethodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, Constants.UseRoutesMethodName)
+                .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
+                .WithModifiers($"{Constants.Public} {Constants.Static}");
+        extensionClassBuilder.WithMethod(useRoutesMethodBuilder);
+        var useRoutesBody = new StringBuilder();
+
+        foreach (var classDeclarationSyntax in classes)
         {
             if (classDeclarationSyntax is null)
             {
@@ -90,38 +95,48 @@ public class MapEndpointGenerator : IIncrementalGenerator
 
             if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.GetAttributeName || a.Name.ToString() == Constants.GetAttributeShortName) is AttributeSyntax getAttributeSyntax)
             {
+                var methodName = $"MapGet{classDeclarationSyntax.Identifier}";
                 var methodBuilder = GetMethodBuilderByType("Get", classDeclarationSyntax, getAttributeSyntax, compilation, attributes, routeUsings);
                 if (methodBuilder is not null)
                 {
+                    useRoutesBody.AppendLine($"{methodName}(builder);");
                     extensionClassBuilder.WithMethod(methodBuilder);
                 }
             }
             else if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.PostAttributeName || a.Name.ToString() == Constants.PostAttributeShortName) is AttributeSyntax postAttributeSyntax)
             {
+                var methodName = $"MapPost{classDeclarationSyntax.Identifier}";
                 var methodBuilder = GetMethodBuilderByType("Post", classDeclarationSyntax, postAttributeSyntax, compilation, attributes, routeUsings);
                 if (methodBuilder is not null)
                 {
+                    useRoutesBody.AppendLine($"{methodName}(builder);");
                     extensionClassBuilder.WithMethod(methodBuilder);
                 }
             }
             else if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.PutAttributeName || a.Name.ToString() == Constants.PutAttributeShortName) is AttributeSyntax putAttributeSyntax)
             {
+                var methodName = $"MapPut{classDeclarationSyntax.Identifier}";
                 var methodBuilder = GetMethodBuilderByType("Put", classDeclarationSyntax, putAttributeSyntax, compilation, attributes, routeUsings);
                 if (methodBuilder is not null)
                 {
+                    useRoutesBody.AppendLine($"{methodName}(builder);");
                     extensionClassBuilder.WithMethod(methodBuilder);
                 }
             }
             else if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.DeleteAttributeName || a.Name.ToString() == Constants.DeleteAttributeShortName) is AttributeSyntax deleteAttributeSyntax)
             {
+                var methodName = $"MapDelete{classDeclarationSyntax.Identifier}";
                 var methodBuilder = GetMethodBuilderByType("Delete", classDeclarationSyntax, deleteAttributeSyntax, compilation, attributes, routeUsings);
                 if (methodBuilder is not null)
                 {
+                    useRoutesBody.AppendLine($"{methodName}(builder);");
                     extensionClassBuilder.WithMethod(methodBuilder);
                 }
             }
         }
 
+        useRoutesBody.AppendLine("return builder;");
+        useRoutesMethodBuilder.WithBody(useRoutesBody.ToString());
         foreach(var classUsing in routeUsings)
         {
             builder.WithUsing(classUsing);
