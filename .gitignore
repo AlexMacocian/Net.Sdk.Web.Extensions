@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Net.Sdk.Web.Extensions/Properties/launchSettings.json
+/Net.Sdk.Web.Extensions.Azure/Properties/launchSettings.json
+/Net.Sdk.Web.Extensions.SourceGenerators.Tests/Properties/launchSettings.json

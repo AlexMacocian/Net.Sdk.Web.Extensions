@@ -74,9 +74,7 @@ public class MapEndpointGenerator : IIncrementalGenerator
         var useRoutesMethodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, Constants.UseRoutesMethodName)
                 .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
                 .WithModifiers($"{Constants.Public} {Constants.Static}");
-        extensionClassBuilder.WithMethod(useRoutesMethodBuilder);
         var useRoutesBody = new StringBuilder();
-
         foreach (var classDeclarationSyntax in classes)
         {
             if (classDeclarationSyntax is null)
@@ -137,7 +135,8 @@ public class MapEndpointGenerator : IIncrementalGenerator
 
         useRoutesBody.AppendLine("return builder;");
         useRoutesMethodBuilder.WithBody(useRoutesBody.ToString());
-        foreach(var classUsing in routeUsings)
+        extensionClassBuilder.WithMethod(useRoutesMethodBuilder);
+        foreach (var classUsing in routeUsings)
         {
             builder.WithUsing(classUsing);
         }
