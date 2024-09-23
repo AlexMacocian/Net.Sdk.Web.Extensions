@@ -24,6 +24,7 @@ jobs:
       Solution_Path: Net.Sdk.Web.Extensions.sln
       Source_Project_Path: Net.Sdk.Web.Extensions\Net.Sdk.Web.Extensions.csproj
       Azure_Project_path: Net.Sdk.Web.Extensions.Azure\Net.Sdk.Web.Extensions.Azure.csproj
+      SourceGenerators_Project_path: Net.Sdk.Web.Extensions.SourceGenerators\Net.Sdk.Web.Extensions.SourceGenerators.csproj
       Actions_Allow_Unsecure_Commands: true
 
     steps:
@@ -56,6 +57,12 @@ jobs:
 
     - name: Package Net.Sdk.Extensions.Azure
       run: dotnet pack -c Release -o . $env:Azure_Project_Path
+
+    - name: Build Net.Sdk.Extensions.SourceGenerators project
+      run: dotnet build $env:SourceGenerators_Project_path -c $env:Configuration
+
+    - name: Package Net.Sdk.Extensions.SourceGenerators
+      run: dotnet pack -c Release -o . $env:SourceGenerators_Project_path
 
     - name: Publish
       run: dotnet nuget push *.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
