@@ -1,8 +1,10 @@
-﻿using Net.Sdk.Web.Extensions.SourceGenerators.Tests.Models;
+﻿using Net.Sdk.Web.Extensions.SourceGenerators.Tests.Filters;
+using Net.Sdk.Web.Extensions.SourceGenerators.Tests.Models;
 
 namespace Net.Sdk.Web.Extensions.SourceGenerators.Tests.Routes;
 
-[GenerateMapDelete(Pattern = "simple")]
+[GenerateMapGet(Pattern = "simple")]
+[RouteFilter(RouteFilterType = typeof(SimpleFilter))]
 public sealed class SimpleRoute : IRoute<SimpleRequest>
 {
     public Task<Response> HandleRequest(SimpleRequest? request, CancellationToken cancellationToken)

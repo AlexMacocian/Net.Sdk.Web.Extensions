@@ -2,9 +2,12 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Sybil;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace Net.Sdk.Web.Extensions.SourceGenerators;
 
@@ -14,6 +17,8 @@ public class MapEndpointGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        context.RegisterPostInitializationOutput(GenerateRouteFilterAttribute);
+
         var classDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
             predicate: static (s, _) => s is ClassDeclarationSyntax,
             transform: static (ctx, _) => GetFilteredClassDeclarationSyntax(ctx)).Where(static c => c is not null);
@@ -85,95 +90,35 @@ public class MapEndpointGenerator : IIncrementalGenerator
 
             if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.GetAttributeName || a.Name.ToString() == Constants.GetAttributeShortName) is AttributeSyntax getAttributeSyntax)
             {
-                var methodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, $"MapGet{classDeclarationSyntax.Identifier}")
-                    .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
-                    .WithModifiers($"{Constants.Public} {Constants.Static}");
-
-                var pattern = getAttributeSyntax.ArgumentList?.Arguments.OfType<AttributeArgumentSyntax>().FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == Constants.PatternPropertyName)?.Expression.ToString().Trim('"');
-                if (pattern is null)
+                var methodBuilder = GetMethodBuilderByType("Get", classDeclarationSyntax, getAttributeSyntax, compilation, attributes, routeUsings);
+                if (methodBuilder is not null)
                 {
-                    continue;
+                    extensionClassBuilder.WithMethod(methodBuilder);
                 }
-
-                methodBuilder.WithBody(@$"
-        builder.MapGet(""{pattern}"", async (HttpContext context, {classDeclarationSyntax.Identifier} route) =>
-        {{
-            var request = await route.PreProcess(context, context.RequestAborted);
-            var response = await route.HandleRequest(request, context.RequestAborted);
-            return response.GetResult();
-        }});
-
-        return builder;");
-                extensionClassBuilder.WithMethod(methodBuilder);
             }
             else if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.PostAttributeName || a.Name.ToString() == Constants.PostAttributeShortName) is AttributeSyntax postAttributeSyntax)
             {
-                var methodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, $"MapPost{classDeclarationSyntax.Identifier}")
-                    .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
-                    .WithModifiers($"{Constants.Public} {Constants.Static}");
-
-                var pattern = postAttributeSyntax.ArgumentList?.Arguments.OfType<AttributeArgumentSyntax>().FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == Constants.PatternPropertyName)?.Expression.ToString().Trim('"');
-                if (pattern is null)
+                var methodBuilder = GetMethodBuilderByType("Post", classDeclarationSyntax, postAttributeSyntax, compilation, attributes, routeUsings);
+                if (methodBuilder is not null)
                 {
-                    continue;
+                    extensionClassBuilder.WithMethod(methodBuilder);
                 }
-
-                methodBuilder.WithBody(@$"
-        builder.MapPost(""{pattern}"", async (HttpContext context, {classDeclarationSyntax.Identifier} route) =>
-        {{
-            var request = await route.PreProcess(context, context.RequestAborted);
-            var response = await route.HandleRequest(request, context.RequestAborted);
-            return response.GetResult();
-        }});
-
-        return builder;");
-                extensionClassBuilder.WithMethod(methodBuilder);
             }
             else if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.PutAttributeName || a.Name.ToString() == Constants.PutAttributeShortName) is AttributeSyntax putAttributeSyntax)
             {
-                var methodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, $"MapPut{classDeclarationSyntax.Identifier}")
-                    .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
-                    .WithModifiers($"{Constants.Public} {Constants.Static}");
-
-                var pattern = putAttributeSyntax.ArgumentList?.Arguments.OfType<AttributeArgumentSyntax>().FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == Constants.PatternPropertyName)?.Expression.ToString().Trim('"');
-                if (pattern is null)
+                var methodBuilder = GetMethodBuilderByType("Put", classDeclarationSyntax, putAttributeSyntax, compilation, attributes, routeUsings);
+                if (methodBuilder is not null)
                 {
-                    continue;
+                    extensionClassBuilder.WithMethod(methodBuilder);
                 }
-
-                methodBuilder.WithBody(@$"
-        builder.MapPut(""{pattern}"", async (HttpContext context, {classDeclarationSyntax.Identifier} route) =>
-        {{
-            var request = await route.PreProcess(context, context.RequestAborted);
-            var response = await route.HandleRequest(request, context.RequestAborted);
-            return response.GetResult();
-        }});
-
-        return builder;");
-                extensionClassBuilder.WithMethod(methodBuilder);
             }
             else if (attributes.FirstOrDefault(a => a.Name.ToString() == Constants.DeleteAttributeName || a.Name.ToString() == Constants.DeleteAttributeShortName) is AttributeSyntax deleteAttributeSyntax)
             {
-                var methodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, $"MapDelete{classDeclarationSyntax.Identifier}")
-                    .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
-                    .WithModifiers($"{Constants.Public} {Constants.Static}");
-
-                var pattern = deleteAttributeSyntax.ArgumentList?.Arguments.OfType<AttributeArgumentSyntax>().FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == Constants.PatternPropertyName)?.Expression.ToString().Trim('"');
-                if (pattern is null)
+                var methodBuilder = GetMethodBuilderByType("Delete", classDeclarationSyntax, deleteAttributeSyntax, compilation, attributes, routeUsings);
+                if (methodBuilder is not null)
                 {
-                    continue;
+                    extensionClassBuilder.WithMethod(methodBuilder);
                 }
-
-                methodBuilder.WithBody(@$"
-        builder.MapDelete(""{pattern}"", async (HttpContext context, {classDeclarationSyntax.Identifier} route) =>
-        {{
-            var request = await route.PreProcess(context, context.RequestAborted);
-            var response = await route.HandleRequest(request, context.RequestAborted);
-            return response.GetResult();
-        }});
-
-        return builder;");
-                extensionClassBuilder.WithMethod(methodBuilder);
             }
         }
 
@@ -184,6 +129,77 @@ public class MapEndpointGenerator : IIncrementalGenerator
 
         var fileSource = builder.Build().ToFullString();
         sourceProductionContext.AddSource($"{Constants.EndpointRouteBuilderExtensionsName}.g", fileSource);
+    }
+
+    private static MethodBuilder? GetMethodBuilderByType(string type, ClassDeclarationSyntax classDeclarationSyntax, AttributeSyntax mapAttributeSyntax, Compilation compilation, List<AttributeSyntax> attributes, HashSet<string> usings)
+    {
+        var methodBuilder = SyntaxBuilder.CreateMethod(Constants.IEndpointRouteBuilderTypeName, $"Map{type}{classDeclarationSyntax.Identifier}")
+                    .WithThisParameter(Constants.IEndpointRouteBuilderTypeName, Constants.BuilderParameterName)
+                    .WithModifiers($"{Constants.Public} {Constants.Static}");
+
+        var pattern = mapAttributeSyntax.ArgumentList?.Arguments.OfType<AttributeArgumentSyntax>().FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == Constants.PatternPropertyName)?.Expression.ToString().Trim('"');
+        if (pattern is null)
+        {
+            return default;
+        }
+
+        var routeFilterSb = new StringBuilder();
+        foreach(var attribute in attributes.Where(a => a.Name.ToString() == Constants.RouteFilterAttributeName || a.Name.ToString() == Constants.RouteFilterAttributeShortName))
+        {
+            var semanticModel = compilation.GetSemanticModel(classDeclarationSyntax.SyntaxTree);
+            if (GetRouteFilterTypeName(semanticModel, attribute) is not string routeFilterType)
+            {
+                continue;
+            }
+
+            var namespaceIndex = routeFilterType.LastIndexOf(".");
+            if (namespaceIndex > 0)
+            {
+                var routeFilterNamespace = routeFilterType.Substring(0, namespaceIndex);
+                routeFilterType = routeFilterType.Substring(namespaceIndex + 1);
+                usings.Add(routeFilterNamespace);
+            }
+
+            routeFilterSb.Append('\n')
+                .Append(@$".AddEndpointFilter<{routeFilterType}>()");
+        }
+
+        methodBuilder.WithBody(@$"
+        builder.MapGet(""{pattern}"", async (HttpContext context, {classDeclarationSyntax.Identifier} route) =>
+        {{
+            var request = await route.PreProcess(context, context.RequestAborted);
+            var response = await route.HandleRequest(request, context.RequestAborted);
+            return response.GetResult();
+        }}){routeFilterSb};
+
+        return builder;");
+
+        return methodBuilder;
+    }
+
+    public static string? GetRouteFilterTypeName(SemanticModel semanticModel, AttributeSyntax attributeSyntax)
+    {
+        var routeFilterTypeArgument = attributeSyntax.ArgumentList?.Arguments
+            .FirstOrDefault(arg => arg.NameEquals?.Name.Identifier.Text == Constants.RouteFilterTypePropertyName);
+
+        if (routeFilterTypeArgument is null)
+        {
+            return default;
+        }
+
+        if (routeFilterTypeArgument.Expression is not TypeOfExpressionSyntax typeExpression)
+        {
+            return default;
+        }
+
+        var typeSymbol = semanticModel.GetTypeInfo(typeExpression.Type);
+        if (typeSymbol.Type is INamedTypeSymbol namedTypeSymbol)
+        {
+            // Get the fully qualified name (namespace + type name)
+            return namedTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
+        return default;
     }
 
     private static T? GetParentOfType<T>(SyntaxNode syntaxNode)
@@ -199,6 +215,31 @@ public class MapEndpointGenerator : IIncrementalGenerator
         }
 
         return GetParentOfType<T>(syntaxNode.Parent);
+    }
+
+    private static void GenerateRouteFilterAttribute(IncrementalGeneratorPostInitializationContext context)
+    {
+        var builder = SyntaxBuilder.CreateCompilationUnit()
+                .WithNamespace(
+                SyntaxBuilder.CreateNamespace(Constants.Namespace)
+                    .WithClass(SyntaxBuilder.CreateClass(Constants.RouteFilterAttributeName)
+                        .WithModifier(Constants.Public)
+                        .WithConstructor(SyntaxBuilder.CreateConstructor(Constants.RouteFilterAttributeName)
+                            .WithModifier(Constants.Public))
+                        .WithAttribute(SyntaxBuilder.CreateAttribute("AttributeUsage")
+                            .WithArgument(AttributeTargets.Class)
+                            .WithArgument("Inherited", false)
+                            .WithArgument("AllowMultiple", true))
+                        .WithBaseClass(nameof(Attribute))
+                        .WithProperty(SyntaxBuilder.CreateProperty($"{Constants.TypeType}?", Constants.RouteFilterTypePropertyName)
+                            .WithModifier(Constants.Public)
+                            .WithAccessor(SyntaxBuilder.CreateGetter())
+                            .WithAccessor(SyntaxBuilder.CreateSetter()))));
+
+
+        var syntax = builder.Build();
+        var source = syntax.ToFullString();
+        context.AddSource($"{Constants.RouteFilterAttributeName}.g", $"#nullable enable\n{source}\n#nullable disable\n");
     }
 }
 

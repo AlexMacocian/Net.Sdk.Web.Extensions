@@ -8,6 +8,7 @@ public static class Constants
     public const string Sealed = "sealed";
     public const string Static = "static";
     public const string StringType = "string";
+    public const string TypeType = "Type";
     public const string IntType = "int";
     public const string ObjectType = "object";
     public const string Default = "default";
@@ -75,4 +76,8 @@ public static class Constants
     public const string WebApplicationBuilderTypeName = "WebApplicationBuilder";
     public const string WithRoutesName = "WithRoutes";
     public const string BuilderParameterName = "builder";
+
+    public const string RouteFilterAttributeName = "RouteFilterAttribute";
+    public const string RouteFilterAttributeShortName = "RouteFilter";
+    public const string RouteFilterTypePropertyName = "RouteFilterType";
 }

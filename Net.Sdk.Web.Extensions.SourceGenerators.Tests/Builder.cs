@@ -5,6 +5,6 @@ public static class Builder
     public static void Build()
     {
         EndpointRouteBuilder builder = new EndpointRouteBuilder();
-        builder.MapDeleteSimpleRoute();
+        builder.MapGetSimpleRoute();
     }
 }
