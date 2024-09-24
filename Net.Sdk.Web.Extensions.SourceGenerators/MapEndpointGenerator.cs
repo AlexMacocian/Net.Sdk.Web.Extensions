@@ -195,7 +195,7 @@ public class MapEndpointGenerator : IIncrementalGenerator
         }
 
         methodBuilder.WithBody(@$"
-        builder.MapGet(""{pattern}"", async (HttpContext context, {classDeclarationSyntax.Identifier} route) =>
+        builder.Map{type}(""{pattern}"", async (HttpContext context, {classDeclarationSyntax.Identifier} route) =>
         {{
             var request = await route.PreProcess(context, context.RequestAborted);
             var response = await route.HandleRequest(request, context.RequestAborted);
