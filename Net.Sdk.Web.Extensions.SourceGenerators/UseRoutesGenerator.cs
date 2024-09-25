@@ -304,7 +304,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
                         .WithConstructor(SyntaxBuilder.CreateConstructor(Constants.RouteFilterAttributeName)
                             .WithModifier(Constants.Public))
                         .WithAttribute(SyntaxBuilder.CreateAttribute("AttributeUsage")
-                            .WithArgument(AttributeTargets.Class)
+                            .WithArgument(AttributeTargets.Class | AttributeTargets.Method)
                             .WithArgument("Inherited", false)
                             .WithArgument("AllowMultiple", true))
                         .WithBaseClass(nameof(Attribute))
