@@ -1,19 +1,17 @@
-﻿using Net.Sdk.Web.Extensions.SourceGenerators.Tests.Filters;
+﻿using Microsoft.AspNetCore.Mvc;
+using Net.Sdk.Web.Extensions.SourceGenerators.Tests.Filters;
 using Net.Sdk.Web.Extensions.SourceGenerators.Tests.Models;
 
 namespace Net.Sdk.Web.Extensions.SourceGenerators.Tests.Routes;
 
-[GenerateMapGet(Pattern = "simple")]
+[GenerateRoute(Pattern = "simple")]
 [RouteFilter(RouteFilterType = typeof(SimpleFilter))]
-public sealed class SimpleRoute : IRoute<SimpleRequest>
+[RouteFilter(RouteFilterType = typeof(SimpleFilter))]
+public sealed class SimpleRoute
 {
-    public Task<Response> HandleRequest(SimpleRequest? request, CancellationToken cancellationToken)
+    [GenerateMapGet(Pattern = "get/{api}/{id}")]
+    public async Task<IResult> GetSimple(string api, string id, [FromBody] SimpleRequest reques)
     {
-        throw new NotImplementedException();
-    }
-
-    public Task<SimpleRequest?> PreProcess(HttpContext? context, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
+        return Results.Ok();
     }
 }

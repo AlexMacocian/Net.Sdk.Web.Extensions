@@ -17,17 +17,10 @@ public static class Constants
     public const string UsingMicrosoftAspNetCoreHttp = "Microsoft.AspNetCore.Http";
     public const string UsingMicrosoftAspNetCoreRouting = "Microsoft.AspNetCore.Routing";
     public const string UsingMicrosoftAspNetCoreBuilder = "Microsoft.AspNetCore.Builder";
+    public const string UsingMicrosoftAspNetCoreMvc = "Microsoft.AspNetCore.Mvc";
 
-    public const string RouteFileName = "Route";
-    public const string RouteInterface = "IRoute";
-    public const string RouteTypeParameter = "TRequest";
-    public const string PreProcessRequestReturnType = "Task<TRequest?>";
-    public const string PreProcessRequestMethodName = "PreProcess";
-    public const string HandleRequestReturnType = "Task<Response>";
-    public const string HandleRequestMethodName = "HandleRequest";
-    public const string HttpContextTypeName = "HttpContext?";
-    public const string HttpContextParameterName = "context";
-    public const string RequestParameterName = "request";
+    public const string RouteAttributeName = "GenerateRouteAttribute";
+    public const string RouteAttributeShortName = "GenerateRoute";
 
     public const string ResponseTypeName = "Response";
     public const string IResultTypeName = "IResult";

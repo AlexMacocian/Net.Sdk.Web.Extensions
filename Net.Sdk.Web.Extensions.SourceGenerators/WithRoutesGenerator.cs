@@ -28,10 +28,7 @@ public class WithRoutesGenerator : IIncrementalGenerator
         if (classDeclarationSyntax.AttributeLists
             .SelectMany(l => l.Attributes)
             .OfType<AttributeSyntax>()
-            .Any(s => s.Name.ToString() == Constants.GetAttributeName || s.Name.ToString() == Constants.GetAttributeShortName ||
-                       s.Name.ToString() == Constants.PostAttributeName || s.Name.ToString() == Constants.PostAttributeShortName ||
-                       s.Name.ToString() == Constants.PutAttributeName || s.Name.ToString() == Constants.PutAttributeShortName ||
-                       s.Name.ToString() == Constants.DeleteAttributeName || s.Name.ToString() == Constants.DeleteAttributeShortName))
+            .Any(s => s.Name.ToString() == Constants.RouteAttributeName || s.Name.ToString() == Constants.RouteAttributeShortName))
         {
             return classDeclarationSyntax;
         }
