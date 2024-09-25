@@ -6,7 +6,7 @@ namespace Net.Sdk.Web.Extensions.SourceGenerators;
 
 [Generator(LanguageNames.CSharp)]
 #nullable enable
-public class RouteAttributeGenerator : IIncrementalGenerator
+public class ControllerAttributeGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

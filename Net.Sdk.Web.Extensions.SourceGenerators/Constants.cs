@@ -19,8 +19,8 @@ public static class Constants
     public const string UsingMicrosoftAspNetCoreBuilder = "Microsoft.AspNetCore.Builder";
     public const string UsingMicrosoftAspNetCoreMvc = "Microsoft.AspNetCore.Mvc";
 
-    public const string RouteAttributeName = "GenerateRouteAttribute";
-    public const string RouteAttributeShortName = "GenerateRoute";
+    public const string RouteAttributeName = "GenerateControllerAttribute";
+    public const string RouteAttributeShortName = "GenerateController";
 
     public const string ResponseTypeName = "Response";
     public const string IResultTypeName = "IResult";
@@ -52,14 +52,14 @@ public static class Constants
     public const string CancellationTokenTypeName = "CancellationToken";
     public const string CancellationTokenParameterName = "cancellationToken";
 
-    public const string GetAttributeName = "GenerateMapGetAttribute";
-    public const string GetAttributeShortName = "GenerateMapGet";
-    public const string PostAttributeName = "GenerateMapPostAttribute";
-    public const string PostAttributeShortName = "GenerateMapPost";
-    public const string PutAttributeName = "GenerateMapPutAttribute";
-    public const string PutAttributeShortName = "GenerateMapPut";
-    public const string DeleteAttributeName = "GenerateMapDeleteAttribute";
-    public const string DeleteAttributeShortName = "GenerateMapDelete";
+    public const string GetAttributeName = "GenerateGetAttribute";
+    public const string GetAttributeShortName = "GenerateGet";
+    public const string PostAttributeName = "GeneratePostAttribute";
+    public const string PostAttributeShortName = "GeneratePost";
+    public const string PutAttributeName = "GeneratePutAttribute";
+    public const string PutAttributeShortName = "GeneratePut";
+    public const string DeleteAttributeName = "GenerateDeleteAttribute";
+    public const string DeleteAttributeShortName = "GenerateDelete";
 
     public const string PatternPropertyName = "Pattern";
 
