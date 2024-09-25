@@ -16,8 +16,6 @@ public class UseRoutesGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterPostInitializationOutput(GenerateRouteFilterAttribute);
-
         var classDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
             predicate: static (s, _) => s is ClassDeclarationSyntax,
             transform: static (ctx, _) => GetFilteredClassDeclarationSyntax(ctx)).Where(static c => c is not null);
@@ -292,31 +290,6 @@ public class UseRoutesGenerator : IIncrementalGenerator
         }
 
         return GetParentOfType<T>(syntaxNode.Parent);
-    }
-
-    private static void GenerateRouteFilterAttribute(IncrementalGeneratorPostInitializationContext context)
-    {
-        var builder = SyntaxBuilder.CreateCompilationUnit()
-                .WithNamespace(
-                SyntaxBuilder.CreateNamespace(Constants.Namespace)
-                    .WithClass(SyntaxBuilder.CreateClass(Constants.RouteFilterAttributeName)
-                        .WithModifier(Constants.Public)
-                        .WithConstructor(SyntaxBuilder.CreateConstructor(Constants.RouteFilterAttributeName)
-                            .WithModifier(Constants.Public))
-                        .WithAttribute(SyntaxBuilder.CreateAttribute("AttributeUsage")
-                            .WithArgument(AttributeTargets.Class | AttributeTargets.Method)
-                            .WithArgument("Inherited", false)
-                            .WithArgument("AllowMultiple", true))
-                        .WithBaseClass(nameof(Attribute))
-                        .WithProperty(SyntaxBuilder.CreateProperty($"{Constants.TypeType}?", Constants.RouteFilterTypePropertyName)
-                            .WithModifier(Constants.Public)
-                            .WithAccessor(SyntaxBuilder.CreateGetter())
-                            .WithAccessor(SyntaxBuilder.CreateSetter()))));
-
-
-        var syntax = builder.Build();
-        var source = syntax.ToFullString();
-        context.AddSource($"{Constants.RouteFilterAttributeName}.g", $"#nullable enable\n{source}\n#nullable disable\n");
     }
 }
 
