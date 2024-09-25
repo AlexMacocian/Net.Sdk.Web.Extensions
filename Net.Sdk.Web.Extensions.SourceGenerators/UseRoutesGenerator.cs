@@ -221,14 +221,19 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 .Append(@$".AddEndpointFilter<{routeFilterType}>()");
         }
 
-        // Get the method signature and generate it in Map
+        /*
+         * Get the parameters of the route method. Ignore CancellationToken cancellationToken and HttpContext httpContext.
+         * Those 2 will be automatically created by the generator.
+         * Simply let the user request them in the method signature and they should flow downstream.
+         */
         var parameters = GetMethodParameters(methodDeclarationSyntax);
         var variables = string.Join(", ", methodDeclarationSyntax.ParameterList.Parameters
             .Select(param => param.Identifier.Text));
             
         return @$"
-        builder.Map{type}(""{pattern}"", async ({classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
+        builder.Map{type}(""{pattern}"", async (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
         {{
+            var cancellationToken = httpContext.RequestAborted;
             return await route.{methodDeclarationSyntax.Identifier}({variables});
         }}){routeFilterSb};";
     }
@@ -236,6 +241,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
     private static string GetMethodParameters(MethodDeclarationSyntax methodDeclaration)
     {
         var parameters = methodDeclaration.ParameterList.Parameters
+            .Where(param => param.Identifier.Text is not "httpContext" and not "cancellationToken")
             .Select(param =>
             {
                 var parameterType = param.Type?.ToString();
