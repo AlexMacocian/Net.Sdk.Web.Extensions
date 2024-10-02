@@ -20,8 +20,12 @@ public class RouteFilterAttributeGenerator : IIncrementalGenerator
                 SyntaxBuilder.CreateNamespace(Constants.Namespace)
                     .WithClass(SyntaxBuilder.CreateClass(Constants.RouteFilterAttributeName)
                         .WithModifier(Constants.Public)
+                        .WithTypeParameter(SyntaxBuilder.CreateTypeParameter(Constants.T))
+                        .WithTypeParameterConstraint(SyntaxBuilder.CreateTypeParameterConstraint(Constants.T)
+                            .WithType(Constants.IEndpointFilterName))
                         .WithConstructor(SyntaxBuilder.CreateConstructor(Constants.RouteFilterAttributeName)
-                            .WithModifier(Constants.Public))
+                            .WithModifier(Constants.Public)
+                            .WithBody($"this.{Constants.RouteFilterTypePropertyName} = typeof({Constants.T});"))
                         .WithAttribute(SyntaxBuilder.CreateAttribute("AttributeUsage")
                             .WithArgument(AttributeTargets.All)
                             .WithArgument("Inherited", false)
@@ -29,8 +33,7 @@ public class RouteFilterAttributeGenerator : IIncrementalGenerator
                         .WithBaseClass(nameof(Attribute))
                         .WithProperty(SyntaxBuilder.CreateProperty($"{Constants.TypeType}?", Constants.RouteFilterTypePropertyName)
                             .WithModifier(Constants.Public)
-                            .WithAccessor(SyntaxBuilder.CreateGetter())
-                            .WithAccessor(SyntaxBuilder.CreateSetter()))));
+                            .WithAccessor(SyntaxBuilder.CreateGetter()))));
 
 
         var syntax = builder.Build();

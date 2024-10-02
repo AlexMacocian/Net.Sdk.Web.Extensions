@@ -5,6 +5,7 @@ using Sybil;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -122,8 +123,9 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 .SelectMany(l => l.Attributes)
                 .OfType<AttributeSyntax>().ToList();
             var basePattern = classAttributes.FirstOrDefault(a => a.Name.ToString() == Constants.RouteAttributeName || a.Name.ToString() == Constants.RouteAttributeShortName)?
-                .ArgumentList?.Arguments.OfType<AttributeArgumentSyntax>()
-                .FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == Constants.PatternPropertyName)?.Expression.ToString().Trim('"');
+                .ArgumentList?.Arguments
+                .FirstOrDefault()?
+                .ToString().Trim('"');
             basePattern ??= string.Empty;
             foreach(var methodDeclarationSyntax in methodDeclarationSyntaxes)
             {
@@ -139,9 +141,8 @@ public class UseRoutesGenerator : IIncrementalGenerator
                                                                                      or Constants.DeleteAttributeName
                                                                                      or Constants.DeleteAttributeShortName)
                                               .ArgumentList?.Arguments
-                                                .OfType<AttributeArgumentSyntax>()
-                                                .FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == Constants.PatternPropertyName)
-                                                ?.Expression.ToString().Trim('"');
+                                              .FirstOrDefault()?
+                                              .ToString().Trim('"');
 
                 if (string.IsNullOrWhiteSpace(basePattern) &&
                     string.IsNullOrWhiteSpace(pattern))
@@ -196,19 +197,43 @@ public class UseRoutesGenerator : IIncrementalGenerator
         HashSet<string> usings)
     {
         // Go over all attributes on the method and parent class and find all RouteFilters
+        var semanticModel = compilation.GetSemanticModel(methodDeclarationSyntax.SyntaxTree);
         var routeFilterSb = new StringBuilder();
         foreach(var attribute in methodDeclarationSyntax.AttributeLists
             .Concat(classDeclarationSyntax.AttributeLists)
             .SelectMany(a => a.Attributes)
             .OfType<AttributeSyntax>()
-            .Where(a => a.Name.ToString() == Constants.RouteFilterAttributeName || a.Name.ToString() == Constants.RouteFilterAttributeShortName))
+            .Where(attribute =>
+            {
+                var attributeSymbol = semanticModel.GetSymbolInfo(attribute).Symbol as IMethodSymbol;
+                if (attributeSymbol?.ContainingType == null)
+                {
+                    return false;
+                }
+
+                var attributeType = attributeSymbol.ContainingType;
+                if (attributeType.Name is not Constants.RouteFilterAttributeName or Constants.RouteFilterAttributeShortName)
+                {
+                    return false;
+                }
+
+                return true;
+            }))
         {
-            var semanticModel = compilation.GetSemanticModel(methodDeclarationSyntax.SyntaxTree);
-            if (GetRouteFilterTypeName(semanticModel, attribute) is not string routeFilterType)
+            
+            if (attribute.Name is not GenericNameSyntax genericNameSyntax || genericNameSyntax.TypeArgumentList.Arguments.Count != 1)
             {
                 continue;
             }
 
+            var routeFilterTypeSyntax = genericNameSyntax.TypeArgumentList.Arguments[0];
+            var routeFilterTypeSymbol = semanticModel.GetSymbolInfo(routeFilterTypeSyntax).Symbol as ITypeSymbol;
+            if (routeFilterTypeSymbol is null)
+            {
+                continue;
+            }
+
+            var routeFilterType = routeFilterTypeSymbol.ToDisplayString();
             var namespaceIndex = routeFilterType.LastIndexOf(".");
             if (namespaceIndex > 0)
             {

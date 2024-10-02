@@ -62,6 +62,7 @@ public static class Constants
     public const string DeleteAttributeShortName = "GenerateDelete";
 
     public const string PatternPropertyName = "Pattern";
+    public const string PatternArgumentName = "pattern";
 
     public const string MapAllRoutes = "MapAllRoutes";
     public const string UseRoutesMethodName = "UseRoutes";
@@ -77,4 +78,7 @@ public static class Constants
     public const string RouteFilterAttributeName = "RouteFilterAttribute";
     public const string RouteFilterAttributeShortName = "RouteFilter";
     public const string RouteFilterTypePropertyName = "RouteFilterType";
+
+    public const string T = "T";
+    public const string IEndpointFilterName = "IEndpointFilter";
 }

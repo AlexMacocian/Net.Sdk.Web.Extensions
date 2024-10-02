@@ -20,14 +20,20 @@ public class ControllerAttributeGenerator : IIncrementalGenerator
                 .WithClass(SyntaxBuilder.CreateClass(Constants.RouteAttributeName)
                     .WithBaseClass(nameof(Attribute))
                     .WithModifiers($"{Constants.Public} {Constants.Sealed}")
+                    .WithConstructor(SyntaxBuilder.CreateConstructor(Constants.RouteAttributeName)
+                        .WithModifier(Constants.Public)
+                        .WithBody($"this.{Constants.PatternPropertyName} = string.Empty;"))
+                    .WithConstructor(SyntaxBuilder.CreateConstructor(Constants.RouteAttributeName)
+                        .WithModifier(Constants.Public)
+                        .WithParameter(Constants.StringType, Constants.PatternArgumentName)
+                        .WithBody($"this.{Constants.PatternPropertyName} = {Constants.PatternArgumentName};"))
                     .WithAttribute(SyntaxBuilder.CreateAttribute("AttributeUsage")
                         .WithArgument(AttributeTargets.Class)
                         .WithArgument("Inherited", false)
                         .WithArgument("AllowMultiple", false))
                     .WithProperty(SyntaxBuilder.CreateProperty(Constants.StringType, Constants.PatternPropertyName)
                         .WithModifier(Constants.Public)
-                        .WithAccessor(SyntaxBuilder.CreateGetter())
-                        .WithAccessor(SyntaxBuilder.CreateSetter()))));
+                        .WithAccessor(SyntaxBuilder.CreateGetter()))));
 
         var syntax = builder.Build();
         var source = syntax.ToFullString();

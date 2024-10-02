@@ -1,11 +1,11 @@
 ﻿namespace Net.Sdk.Web.Extensions.SourceGenerators.Tests.Routes;
 
-[GenerateRoute]
+[GenerateController]
 public class SimpleRoute2
 {
-    [GenerateMapPost(Pattern = "somethingSimple")]
+    [GeneratePost("somethingSimple")]
     public async Task<IResult> GetSomething()
     {
-
+        return Results.Ok();
     }
 }

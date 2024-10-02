@@ -27,7 +27,12 @@ public class MapAttributeGenerator : IIncrementalGenerator
                     .WithClass(SyntaxBuilder.CreateClass(attributeName)
                         .WithModifier(Constants.Public)
                         .WithConstructor(SyntaxBuilder.CreateConstructor(attributeName)
-                            .WithModifier(Constants.Public))
+                            .WithModifier(Constants.Public)
+                            .WithBody($"this.{Constants.PatternPropertyName} = string.Empty;"))
+                        .WithConstructor(SyntaxBuilder.CreateConstructor(attributeName)
+                            .WithModifier(Constants.Public)
+                            .WithParameter(Constants.StringType, Constants.PatternArgumentName)
+                            .WithBody($"this.{Constants.PatternPropertyName} = {Constants.PatternArgumentName};"))
                         .WithAttribute(SyntaxBuilder.CreateAttribute("AttributeUsage")
                             .WithArgument(AttributeTargets.Method)
                             .WithArgument("Inherited", false)
@@ -35,8 +40,7 @@ public class MapAttributeGenerator : IIncrementalGenerator
                         .WithBaseClass(nameof(Attribute))
                         .WithProperty(SyntaxBuilder.CreateProperty(Constants.StringType, Constants.PatternPropertyName)
                             .WithModifier(Constants.Public)
-                            .WithAccessor(SyntaxBuilder.CreateGetter())
-                            .WithAccessor(SyntaxBuilder.CreateSetter()))));
+                            .WithAccessor(SyntaxBuilder.CreateGetter()))));
 
         var syntax = builder.Build();
         var source = syntax.ToFullString();
