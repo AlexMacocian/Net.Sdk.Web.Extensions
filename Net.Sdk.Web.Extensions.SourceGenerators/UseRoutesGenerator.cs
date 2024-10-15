@@ -273,7 +273,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 var parameterName = param.Identifier.Text;
                 var attributes = param.AttributeLists
                     .SelectMany(attrList => attrList.Attributes)
-                    .Select(attr => $"[{attr.Name}]");
+                    .Select(attr => $"[{attr}]");
 
                 var attributesString = string.Join(" ", attributes);
                 return $"{attributesString} {parameterType} {parameterName}".Trim();
