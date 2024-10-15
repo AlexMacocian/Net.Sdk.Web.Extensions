@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
-    <Version>0.8.3</Version>
+    <Version>0.8.4</Version>
     <Authors>Alexandru Macocian</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -24,12 +24,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CorrelationVector" Version="1.0.42" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-    <PackageReference Include="SystemExtensions.NetCore" Version="1.6.8" />
-    <PackageReference Include="SystemExtensions.NetStandard" Version="1.6.8" />
-    <PackageReference Include="SystemExtensions.NetStandard.DependencyInjection" Version="1.4.1" />
+    <PackageReference Include="SystemExtensions.NetCore" Version="1.6.9" />
+    <PackageReference Include="SystemExtensions.NetStandard" Version="1.6.9" />
+    <PackageReference Include="SystemExtensions.NetStandard.DependencyInjection" Version="1.6.9" />
   </ItemGroup>
 
 </Project>
