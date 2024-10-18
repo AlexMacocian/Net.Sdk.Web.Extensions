@@ -262,11 +262,11 @@ public class UseRoutesGenerator : IIncrementalGenerator
         return returnTypeSymbol?.ToDisplayString() switch
         {
             "System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult>" => @$"
-        builder.Map{type}(""{pattern}"", async (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
+        builder.Map{type}(""{pattern}"", (Delegate)((HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
         {{
             var cancellationToken = httpContext.RequestAborted;
-            return await route.{methodDeclarationSyntax.Identifier}({variables});
-        }}){routeFilterSb};",
+            return route.{methodDeclarationSyntax.Identifier}({variables});
+        }})){routeFilterSb};",
             "Microsoft.AspNetCore.Http.IResult" => @$"
         builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
         {{
