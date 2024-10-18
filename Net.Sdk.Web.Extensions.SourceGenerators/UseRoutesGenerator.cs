@@ -262,12 +262,18 @@ public class UseRoutesGenerator : IIncrementalGenerator
         return returnTypeSymbol?.ToDisplayString() switch
         {
             "System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult>" => @$"
-        builder.Map{type}(""{pattern}"", (Delegate)((HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
+        builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
         {{
             var cancellationToken = httpContext.RequestAborted;
             return route.{methodDeclarationSyntax.Identifier}({variables});
-        }})){routeFilterSb};",
+        }}){routeFilterSb};",
             "Microsoft.AspNetCore.Http.IResult" => @$"
+        builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
+        {{
+            var cancellationToken = httpContext.RequestAborted;
+            return route.{methodDeclarationSyntax.Identifier}({variables});
+        }}){routeFilterSb};",
+            "System.Threading.Tasks.ValueTask<Microsoft.AspNetCore.Http.IResult>" => @$"
         builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
         {{
             var cancellationToken = httpContext.RequestAborted;
