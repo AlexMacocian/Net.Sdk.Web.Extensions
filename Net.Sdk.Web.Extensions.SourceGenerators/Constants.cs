@@ -14,6 +14,7 @@ public static class Constants
     public const string Default = "default";
     public const string Namespace = "Net.Sdk.Web";
     public const string UsingSystemThreading = "System.Threading";
+    public const string UsingSystemRuntimeCompilerServices = "System.Runtime.CompilerServices";
     public const string UsingMicrosoftAspNetCoreHttp = "Microsoft.AspNetCore.Http";
     public const string UsingMicrosoftAspNetCoreRouting = "Microsoft.AspNetCore.Routing";
     public const string UsingMicrosoftAspNetCoreBuilder = "Microsoft.AspNetCore.Builder";
@@ -81,4 +82,7 @@ public static class Constants
 
     public const string T = "T";
     public const string IEndpointFilterName = "IEndpointFilter";
+
+    public const string MethodImplAttribute = "MethodImpl";
+    public const string MethodImplArgument = "MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization | MethodImplOptions.PreserveSig";
 }

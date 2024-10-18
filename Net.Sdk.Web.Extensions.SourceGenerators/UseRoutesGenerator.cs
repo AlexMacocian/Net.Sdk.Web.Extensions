@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Net.Sdk.Web.Extensions.SourceGenerators;
@@ -72,7 +73,8 @@ public class UseRoutesGenerator : IIncrementalGenerator
             .WithUsing(Constants.UsingMicrosoftAspNetCoreRouting)
             .WithUsing(Constants.UsingMicrosoftAspNetCoreHttp)
             .WithUsing(Constants.UsingMicrosoftAspNetCoreBuilder)
-            .WithUsing(Constants.UsingMicrosoftAspNetCoreMvc);
+            .WithUsing(Constants.UsingMicrosoftAspNetCoreMvc)
+            .WithUsing(Constants.UsingSystemRuntimeCompilerServices);
 
         var routeUsings = new HashSet<string>();
         
@@ -83,7 +85,9 @@ public class UseRoutesGenerator : IIncrementalGenerator
         namespaceBuilder.WithClass(webAppBuilder);
         var useRoutesWebAppMethodBuilder = SyntaxBuilder.CreateMethod(Constants.WebApplicationTypeName, Constants.UseRoutesMethodName)
                 .WithThisParameter(Constants.WebApplicationTypeName, Constants.BuilderParameterName)
-                .WithModifiers($"{Constants.Public} {Constants.Static}");
+                .WithModifiers($"{Constants.Public} {Constants.Static}")
+                .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
+                    .WithRawArgument(Constants.MethodImplArgument));
         webAppBuilder.WithMethod(useRoutesWebAppMethodBuilder);
 
         var useRoutesWebAppBody = new StringBuilder();
