@@ -4,7 +4,7 @@
 public class SimpleRoute2
 {
     [GeneratePost("somethingSimple")]
-    public async Task<IResult> GetSomething()
+    public IResult GetSomething()
     {
         return Results.Ok();
     }

@@ -254,13 +254,27 @@ public class UseRoutesGenerator : IIncrementalGenerator
         var parameters = GetMethodParameters(methodDeclarationSyntax);
         var variables = string.Join(", ", methodDeclarationSyntax.ParameterList.Parameters
             .Select(param => param.Identifier.Text));
-            
-        return @$"
+
+        /*
+         * Generate an async lambda for Task<IResult> or a synchronous lambda for IResult returns. If neither are matched, do not generate any method
+         */
+        var returnTypeSymbol = semanticModel.GetSymbolInfo(methodDeclarationSyntax.ReturnType).Symbol as ITypeSymbol;
+        return returnTypeSymbol?.ToDisplayString() switch
+        {
+            "System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult>" => @$"
         builder.Map{type}(""{pattern}"", async (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
         {{
             var cancellationToken = httpContext.RequestAborted;
             return await route.{methodDeclarationSyntax.Identifier}({variables});
-        }}){routeFilterSb};";
+        }}){routeFilterSb};",
+            "Microsoft.AspNetCore.Http.IResult" => @$"
+        builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
+        {{
+            var cancellationToken = httpContext.RequestAborted;
+            return route.{methodDeclarationSyntax.Identifier}({variables});
+        }}){routeFilterSb};",
+            _ => default
+        };
     }
 
     private static string GetMethodParameters(MethodDeclarationSyntax methodDeclaration)
