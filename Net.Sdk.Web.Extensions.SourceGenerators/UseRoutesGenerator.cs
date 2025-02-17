@@ -88,7 +88,12 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 .WithModifiers($"{Constants.Public} {Constants.Static}")
                 .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
                     .WithRawArgument(Constants.MethodImplArgument));
+        var registerWebAppMethodBuilder = SyntaxBuilder.CreateMethod(Constants.WebApplicationTypeName, Constants.RegisterRoutesMethodName)
+            .WithModifiers($"{Constants.Public} {Constants.Static}")
+            .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
+                .WithRawArgument(Constants.MethodImplArgument));
         webAppBuilder.WithMethod(useRoutesWebAppMethodBuilder);
+        webAppBuilder.WithMethod(registerWebAppMethodBuilder);
 
         var useRoutesWebAppBody = new StringBuilder();
         foreach (var classToMethodMap in classToMethodMapping)
@@ -183,6 +188,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
 
         useRoutesWebAppBody.AppendLine("return builder;");
         useRoutesWebAppMethodBuilder.WithBody(useRoutesWebAppBody.ToString());
+        registerWebAppMethodBuilder.WithBody(useRoutesWebAppBody.ToString());
         foreach (var classUsing in routeUsings)
         {
             builder.WithUsing(classUsing);

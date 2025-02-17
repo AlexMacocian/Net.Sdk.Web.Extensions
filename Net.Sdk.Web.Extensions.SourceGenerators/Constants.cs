@@ -67,6 +67,7 @@ public static class Constants
 
     public const string MapAllRoutes = "MapAllRoutes";
     public const string UseRoutesMethodName = "UseRoutes";
+    public const string RegisterRoutesMethodName = "RegisterRoutes";
     public const string EndpointRouteBuilderExtensionsName = "EndpointRouteBuilderExtensions";
     public const string IEndpointRouteBuilderTypeName = "IEndpointRouteBuilder";
     public const string WebApplicationBuilderExtensionsName = "WebApplicationBuilderExtension";
