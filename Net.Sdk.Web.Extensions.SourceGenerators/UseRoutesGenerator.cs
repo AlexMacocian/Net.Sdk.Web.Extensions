@@ -89,6 +89,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
                     .WithRawArgument(Constants.MethodImplArgument));
         var registerWebAppMethodBuilder = SyntaxBuilder.CreateMethod(Constants.WebApplicationTypeName, Constants.RegisterRoutesMethodName)
+            .WithParameter(Constants.WebApplicationTypeName, Constants.BuilderParameterName)
             .WithModifiers($"{Constants.Public} {Constants.Static}")
             .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
                 .WithRawArgument(Constants.MethodImplArgument));
