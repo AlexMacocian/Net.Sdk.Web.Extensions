@@ -2,12 +2,9 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Sybil;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Net.Sdk.Web.Extensions.SourceGenerators;
@@ -68,16 +65,17 @@ public class UseRoutesGenerator : IIncrementalGenerator
         }
 
         var languageVersion = maybeLanguageVersion.Value;
-        var builder = SyntaxBuilder.CreateCompilationUnit()
-            .WithUsing(Constants.UsingSystemThreading)
-            .WithUsing(Constants.UsingMicrosoftAspNetCoreRouting)
-            .WithUsing(Constants.UsingMicrosoftAspNetCoreHttp)
-            .WithUsing(Constants.UsingMicrosoftAspNetCoreBuilder)
-            .WithUsing(Constants.UsingMicrosoftAspNetCoreMvc)
-            .WithUsing(Constants.UsingSystemRuntimeCompilerServices);
+        var routeUsings = new HashSet<string>
+        {
+            Constants.UsingSystemThreading,
+            Constants.UsingMicrosoftAspNetCoreRouting,
+            Constants.UsingMicrosoftAspNetCoreHttp,
+            Constants.UsingMicrosoftAspNetCoreBuilder,
+            Constants.UsingMicrosoftAspNetCoreMvc,
+            Constants.UsingSystemRuntimeCompilerServices
+        };
 
-        var routeUsings = new HashSet<string>();
-        
+        var builder = SyntaxBuilder.CreateCompilationUnit();
         var namespaceBuilder = languageVersion >= LanguageVersion.CSharp10 ? SyntaxBuilder.CreateFileScopedNamespace(Constants.Namespace) : SyntaxBuilder.CreateNamespace(Constants.Namespace);
         builder.WithNamespace(namespaceBuilder);
         var webAppBuilder = SyntaxBuilder.CreateClass(Constants.WebApplicationExtensionsName)
@@ -88,13 +86,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 .WithModifiers($"{Constants.Public} {Constants.Static}")
                 .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
                     .WithRawArgument(Constants.MethodImplArgument));
-        var registerWebAppMethodBuilder = SyntaxBuilder.CreateMethod(Constants.WebApplicationTypeName, Constants.RegisterRoutesMethodName)
-            .WithParameter(Constants.WebApplicationTypeName, Constants.BuilderParameterName)
-            .WithModifiers($"{Constants.Public} {Constants.Static}")
-            .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
-                .WithRawArgument(Constants.MethodImplArgument));
         webAppBuilder.WithMethod(useRoutesWebAppMethodBuilder);
-        webAppBuilder.WithMethod(registerWebAppMethodBuilder);
 
         var useRoutesWebAppBody = new StringBuilder();
         foreach (var classToMethodMap in classToMethodMapping)
@@ -164,22 +156,22 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 var innerPattern = $"/{pattern?.Trim('/')}";
                 var finalPattern = $"{outerPattern}{innerPattern}".Replace("//", "/");
 
-                if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.GetAttributeName or Constants.GetAttributeShortName) is AttributeSyntax &&
+                if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.GetAttributeName or Constants.GetAttributeShortName) is not null &&
                     GetMethodBodyByType("Get", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string getMethodBody)
                 {
                     useRoutesWebAppBody.AppendLine(getMethodBody);
                 }
-                else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.PostAttributeName or Constants.PostAttributeShortName) is AttributeSyntax &&
+                else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.PostAttributeName or Constants.PostAttributeShortName) is not null &&
                     GetMethodBodyByType("Post", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string postMethodBody)
                 {
                     useRoutesWebAppBody.AppendLine(postMethodBody);
                 }
-                else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.PutAttributeName or Constants.PutAttributeShortName) is AttributeSyntax &&
+                else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.PutAttributeName or Constants.PutAttributeShortName) is not null &&
                     GetMethodBodyByType("Put", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string putMethodBoty)
                 {
                     useRoutesWebAppBody.AppendLine(putMethodBoty);
                 }
-                else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.DeleteAttributeName or Constants.DeleteAttributeShortName) is AttributeSyntax &&
+                else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.DeleteAttributeName or Constants.DeleteAttributeShortName) is not null &&
                     GetMethodBodyByType("Delete", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string deleteMethodBody)
                 {
                     useRoutesWebAppBody.AppendLine(deleteMethodBody);
@@ -189,7 +181,6 @@ public class UseRoutesGenerator : IIncrementalGenerator
 
         useRoutesWebAppBody.AppendLine("return builder;");
         useRoutesWebAppMethodBuilder.WithBody(useRoutesWebAppBody.ToString());
-        registerWebAppMethodBuilder.WithBody(useRoutesWebAppBody.ToString());
         foreach (var classUsing in routeUsings)
         {
             builder.WithUsing(classUsing);
@@ -231,15 +222,13 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 return true;
             }))
         {
-            
             if (attribute.Name is not GenericNameSyntax genericNameSyntax || genericNameSyntax.TypeArgumentList.Arguments.Count != 1)
             {
                 continue;
             }
 
             var routeFilterTypeSyntax = genericNameSyntax.TypeArgumentList.Arguments[0];
-            var routeFilterTypeSymbol = semanticModel.GetSymbolInfo(routeFilterTypeSyntax).Symbol as ITypeSymbol;
-            if (routeFilterTypeSymbol is null)
+            if (semanticModel.GetSymbolInfo(routeFilterTypeSyntax).Symbol is not ITypeSymbol routeFilterTypeSymbol)
             {
                 continue;
             }
@@ -273,10 +262,10 @@ public class UseRoutesGenerator : IIncrementalGenerator
         return returnTypeSymbol?.ToDisplayString() switch
         {
             "System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult>" => @$"
-        builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
+        builder.Map{type}(""{pattern}"", async (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
         {{
             var cancellationToken = httpContext.RequestAborted;
-            return route.{methodDeclarationSyntax.Identifier}({variables});
+            return await route.{methodDeclarationSyntax.Identifier}({variables});
         }}){routeFilterSb};",
             "Microsoft.AspNetCore.Http.IResult" => @$"
         builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>

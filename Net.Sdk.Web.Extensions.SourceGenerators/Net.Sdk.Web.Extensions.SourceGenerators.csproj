@@ -2,24 +2,25 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.8.22</Version>
+    <Version>0.9.0</Version>
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Alexandru Macocian</Authors>
     <Description>Source generators extensions for Net.Sdk.Web. Generates mapping to be used in AOT projects.</Description>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <IsRoslynComponent>true</IsRoslynComponent>
     <IsRoslynAnalyzer>true</IsRoslynAnalyzer>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" PrivateAssets="all" />
     <PackageReference Include="Sybil" Version="0.8.4" PrivateAssets="all" />
   </ItemGroup>
 
