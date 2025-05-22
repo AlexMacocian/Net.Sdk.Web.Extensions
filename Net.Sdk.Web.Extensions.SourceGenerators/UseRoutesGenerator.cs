@@ -312,14 +312,16 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 typeArg = genericNameSyntax.TypeArgumentList.Arguments[0].ToString();
             }
 
-            var statusCodeArg = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "StatusCode").Value.Value as int? ?? 200;
+            var statusCode = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "StatusCode").Value.Value as int ?
+            ?? attributeData.ConstructorArguments.FirstOrDefault(arg => arg.Type?.SpecialType == SpecialType.System_Int32).Value as int ?
+            ?? 200;
             if (typeArg is null)
             {
-                extensionsBuilder.Append($"\n.{Constants.ProducesAttributeShortName}(statusCode: {statusCodeArg})");
+                extensionsBuilder.Append($"\n.{Constants.ProducesAttributeShortName}(statusCode: {statusCode})");
             }
             else
             {
-                extensionsBuilder.Append($"\n.{Constants.ProducesAttributeShortName}(statusCode: {statusCodeArg}, responseType: typeof({typeArg}))");
+                extensionsBuilder.Append($"\n.{Constants.ProducesAttributeShortName}(statusCode: {statusCode}, responseType: typeof({typeArg}))");
             }
         }
     }
