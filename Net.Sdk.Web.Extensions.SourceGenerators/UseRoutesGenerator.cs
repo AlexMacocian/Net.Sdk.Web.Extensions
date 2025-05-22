@@ -2,8 +2,10 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Sybil;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -64,6 +66,13 @@ public class UseRoutesGenerator : IIncrementalGenerator
             return;
         }
 
+        var openApiSupport = false;
+        if (compilation.GetTypeByMetadataName(Constants.ProducesResponseTypeType) is not null &&
+            compilation.GetTypeByMetadataName(Constants.OpenApiConvetionBuilderExtensionsType) is not null)
+        {
+            openApiSupport = true;
+        }
+
         var languageVersion = maybeLanguageVersion.Value;
         var routeUsings = new HashSet<string>
         {
@@ -83,9 +92,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
         namespaceBuilder.WithClass(webAppBuilder);
         var useRoutesWebAppMethodBuilder = SyntaxBuilder.CreateMethod(Constants.WebApplicationTypeName, Constants.UseRoutesMethodName)
                 .WithThisParameter(Constants.WebApplicationTypeName, Constants.BuilderParameterName)
-                .WithModifiers($"{Constants.Public} {Constants.Static}")
-                .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.MethodImplAttribute)
-                    .WithRawArgument(Constants.MethodImplArgument));
+                .WithModifiers($"{Constants.Public} {Constants.Static}");
         webAppBuilder.WithMethod(useRoutesWebAppMethodBuilder);
 
         var useRoutesWebAppBody = new StringBuilder();
@@ -157,22 +164,22 @@ public class UseRoutesGenerator : IIncrementalGenerator
                 var finalPattern = $"{outerPattern}{innerPattern}".Replace("//", "/");
 
                 if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.GetAttributeName or Constants.GetAttributeShortName) is not null &&
-                    GetMethodBodyByType("Get", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string getMethodBody)
+                    GetMethodBodyByType("Get", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings, openApiSupport) is string getMethodBody)
                 {
                     useRoutesWebAppBody.AppendLine(getMethodBody);
                 }
                 else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.PostAttributeName or Constants.PostAttributeShortName) is not null &&
-                    GetMethodBodyByType("Post", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string postMethodBody)
+                    GetMethodBodyByType("Post", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings, openApiSupport) is string postMethodBody)
                 {
                     useRoutesWebAppBody.AppendLine(postMethodBody);
                 }
                 else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.PutAttributeName or Constants.PutAttributeShortName) is not null &&
-                    GetMethodBodyByType("Put", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string putMethodBoty)
+                    GetMethodBodyByType("Put", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings, openApiSupport) is string putMethodBoty)
                 {
                     useRoutesWebAppBody.AppendLine(putMethodBoty);
                 }
                 else if (methodAttributes.FirstOrDefault(a => a.Name.ToString() is Constants.DeleteAttributeName or Constants.DeleteAttributeShortName) is not null &&
-                    GetMethodBodyByType("Delete", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings) is string deleteMethodBody)
+                    GetMethodBodyByType("Delete", finalPattern, classDeclarationSyntax, methodDeclarationSyntax, compilation, routeUsings, openApiSupport) is string deleteMethodBody)
                 {
                     useRoutesWebAppBody.AppendLine(deleteMethodBody);
                 }
@@ -196,54 +203,55 @@ public class UseRoutesGenerator : IIncrementalGenerator
         ClassDeclarationSyntax classDeclarationSyntax,
         MethodDeclarationSyntax methodDeclarationSyntax,
         Compilation compilation,
-        HashSet<string> usings)
+        HashSet<string> usings,
+        bool openApiSupport)
     {
         // Go over all attributes on the method and parent class and find all RouteFilters
         var semanticModel = compilation.GetSemanticModel(methodDeclarationSyntax.SyntaxTree);
-        var routeFilterSb = new StringBuilder();
-        foreach(var attribute in methodDeclarationSyntax.AttributeLists
+        var extensionsBuilder = new StringBuilder();
+
+        foreach (var attribute in methodDeclarationSyntax.AttributeLists
             .Concat(classDeclarationSyntax.AttributeLists)
             .SelectMany(a => a.Attributes)
-            .OfType<AttributeSyntax>()
-            .Where(attribute =>
-            {
-                var attributeSymbol = semanticModel.GetSymbolInfo(attribute).Symbol as IMethodSymbol;
-                if (attributeSymbol?.ContainingType == null)
-                {
-                    return false;
-                }
-
-                var attributeType = attributeSymbol.ContainingType;
-                if (attributeType.Name is not Constants.RouteFilterAttributeName or Constants.RouteFilterAttributeShortName)
-                {
-                    return false;
-                }
-
-                return true;
-            }))
+            .OfType<AttributeSyntax>())
         {
-            if (attribute.Name is not GenericNameSyntax genericNameSyntax || genericNameSyntax.TypeArgumentList.Arguments.Count != 1)
+            var attributeSymbol = semanticModel.GetSymbolInfo(attribute).Symbol as IMethodSymbol;
+            AddRouteFilters(semanticModel, attribute, attributeSymbol, extensionsBuilder, usings);
+            if (openApiSupport)
             {
-                continue;
-            }
+                AddAttributeExtension(
+                    attribute,
+                    attributeSymbol,
+                    extensionsBuilder,
+                    Constants.EndpointNameAttributeName,
+                    Constants.EndpointNameAttributeShortName,
+                    Constants.WithNameExtension);
 
-            var routeFilterTypeSyntax = genericNameSyntax.TypeArgumentList.Arguments[0];
-            if (semanticModel.GetSymbolInfo(routeFilterTypeSyntax).Symbol is not ITypeSymbol routeFilterTypeSymbol)
-            {
-                continue;
-            }
+                AddAttributeExtension(
+                    attribute,
+                    attributeSymbol,
+                    extensionsBuilder,
+                    Constants.EndpointSummaryAttributeName,
+                    Constants.EndpointSummaryAttributeShortName,
+                    Constants.WithSummaryExtension);
 
-            var routeFilterType = routeFilterTypeSymbol.ToDisplayString();
-            var namespaceIndex = routeFilterType.LastIndexOf(".");
-            if (namespaceIndex > 0)
-            {
-                var routeFilterNamespace = routeFilterType.Substring(0, namespaceIndex);
-                routeFilterType = routeFilterType.Substring(namespaceIndex + 1);
-                usings.Add(routeFilterNamespace);
-            }
+                AddAttributeExtension(
+                    attribute,
+                    attributeSymbol,
+                    extensionsBuilder,
+                    Constants.EndpointDescriptionAttributeName,
+                    Constants.EndpointDescriptionAttributeShortName,
+                    Constants.WithDescriptionExtension);
 
-            routeFilterSb.Append('\n')
-                .Append(@$".AddEndpointFilter<{routeFilterType}>()");
+                AddAuthorizeExtension(attribute, attributeSymbol, extensionsBuilder);
+            }
+        }
+
+        if (openApiSupport)
+        {
+            var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclarationSyntax);
+            AddProducesResponseTypeExtension(methodSymbol, extensionsBuilder);
+            extensionsBuilder.AppendLine($"\n.{Constants.WithOpenApiExtension}()");
         }
 
         /*
@@ -255,32 +263,143 @@ public class UseRoutesGenerator : IIncrementalGenerator
         var variables = string.Join(", ", methodDeclarationSyntax.ParameterList.Parameters
             .Select(param => param.Identifier.Text));
 
+        var newMethodName = $"{classDeclarationSyntax.Identifier}{methodDeclarationSyntax.Identifier}";
         /*
          * Generate an async lambda for Task<IResult> or a synchronous lambda for IResult returns. If neither are matched, do not generate any method
          */
         var returnTypeSymbol = semanticModel.GetSymbolInfo(methodDeclarationSyntax.ReturnType).Symbol as ITypeSymbol;
-        return returnTypeSymbol?.ToDisplayString() switch
+        var returnType = returnTypeSymbol?.ToDisplayString();
+        var isAsync = returnType switch
         {
-            "System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult>" => @$"
-        builder.Map{type}(""{pattern}"", async (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
-        {{
-            var cancellationToken = httpContext.RequestAborted;
-            return await route.{methodDeclarationSyntax.Identifier}({variables});
-        }}){routeFilterSb};",
-            "Microsoft.AspNetCore.Http.IResult" => @$"
-        builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
-        {{
-            var cancellationToken = httpContext.RequestAborted;
-            return route.{methodDeclarationSyntax.Identifier}({variables});
-        }}){routeFilterSb};",
-            "System.Threading.Tasks.ValueTask<Microsoft.AspNetCore.Http.IResult>" => @$"
-        builder.Map{type}(""{pattern}"", (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
-        {{
-            var cancellationToken = httpContext.RequestAborted;
-            return route.{methodDeclarationSyntax.Identifier}({variables});
-        }}){routeFilterSb};",
+            "System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult>" => (bool?)true,
+            "System.Threading.Tasks.ValueTask<Microsoft.AspNetCore.Http.IResult>" => (bool?)true,
+            "Microsoft.AspNetCore.Http.IResult" => (bool?)false,
             _ => default
         };
+
+        if (isAsync is null)
+        {
+            return default;
+        }
+
+        var lambdaBody = @$"
+        builder.Map{type}(""{pattern}"", static (HttpContext httpContext, {classDeclarationSyntax.Identifier} route{(parameters.Length > 0 ? $", {parameters}" : "")}) =>
+        {{
+            var cancellationToken = httpContext.RequestAborted;
+            return {(isAsync is true ? $"new DeferredResult(route.{methodDeclarationSyntax.Identifier}({variables}))" : $"route.{methodDeclarationSyntax.Identifier}({variables})")};
+        }})
+        {extensionsBuilder};";
+        return lambdaBody;
+    }
+
+    private static void AddProducesResponseTypeExtension(
+        IMethodSymbol? methodSymbol,
+        StringBuilder extensionsBuilder)
+    {
+        foreach (var attributeData in methodSymbol?.GetAttributes() ?? [])
+        {
+            var attrClassName = attributeData.AttributeClass?.Name;
+            if (attrClassName is not Constants.ProducesResponseTypeAttributeName or Constants.ProducesResponseTypeAttributeShortName)
+            {
+                continue;
+            }
+
+            var typeArg = (attributeData.NamedArguments.FirstOrDefault(na => na.Key == "Type").Value.Value as ITypeSymbol)?.ToString();
+            if (attributeData.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attributeSyntax &&
+                attributeSyntax.Name is GenericNameSyntax genericNameSyntax &&
+                genericNameSyntax.TypeArgumentList.Arguments.Count == 1)
+            {
+                typeArg = genericNameSyntax.TypeArgumentList.Arguments[0].ToString();
+            }
+
+            var statusCodeArg = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "StatusCode").Value.Value as int? ?? 200;
+            if (typeArg is null)
+            {
+                extensionsBuilder.Append($"\n.{Constants.ProducesAttributeShortName}(statusCode: {statusCodeArg})");
+            }
+            else
+            {
+                extensionsBuilder.Append($"\n.{Constants.ProducesAttributeShortName}(statusCode: {statusCodeArg}, responseType: typeof({typeArg}))");
+            }
+        }
+    }
+
+    private static void AddAuthorizeExtension(
+        AttributeSyntax attributeSyntax,
+        IMethodSymbol? attributeSymbol,
+        StringBuilder extensionsBuilder)
+    {
+        if (attributeSymbol?.ContainingType is not INamedTypeSymbol attributeType ||
+            attributeType.Name is not Constants.AuthorizeAttributeName or Constants.AuthorizeAttributeShortName)
+        {
+            return;
+        }
+
+        if (attributeSyntax.ArgumentList?.Arguments.Count > 0)
+        {
+            var policy = attributeSyntax.ArgumentList.Arguments[0].ToString().Trim('"');
+            extensionsBuilder.Append($"\n.{Constants.RequiresAuthorization}(\"{policy}\")");
+        }
+        else
+        {
+            extensionsBuilder.Append($"\n.{Constants.RequiresAuthorization}()");
+        }
+    }
+
+    private static void AddAttributeExtension(
+        AttributeSyntax attributeSyntax,
+        IMethodSymbol? attributeSymbol,
+        StringBuilder extensionsBuilder,
+        string attributeName,
+        string attributeShortName,
+        string extensionMethod)
+    {
+        if (attributeSymbol?.ContainingType is not INamedTypeSymbol attributeType ||
+            (attributeType.Name != attributeName && attributeType.Name != attributeShortName))
+        {
+            return;
+        }
+
+        if (attributeSyntax.ArgumentList is null ||
+            attributeSyntax.ArgumentList.Arguments.Count <= 0)
+        {
+            return;
+        }
+
+        var name = attributeSyntax.ArgumentList.Arguments[0].ToString().Trim('"');
+        extensionsBuilder.Append($"\n.{extensionMethod}(\"{name}\")");
+    }
+
+    private static void AddRouteFilters(
+        SemanticModel semanticModel,
+        AttributeSyntax attributeSyntax,
+        IMethodSymbol? attributeSymbol,
+        StringBuilder extensionsBuilder,
+        HashSet<string> usings)
+    {
+        if (attributeSymbol?.ContainingType is not INamedTypeSymbol attributeType ||
+            attributeType.Name is not Constants.RouteFilterAttributeName or Constants.RouteFilterAttributeShortName ||
+            attributeSyntax.Name is not GenericNameSyntax genericNameSyntax || genericNameSyntax.TypeArgumentList.Arguments.Count != 1)
+        {
+            return;
+        }
+
+        var routeFilterTypeSyntax = genericNameSyntax.TypeArgumentList.Arguments[0];
+        if (semanticModel.GetSymbolInfo(routeFilterTypeSyntax).Symbol is not ITypeSymbol routeFilterTypeSymbol)
+        {
+            return;
+        }
+
+        var routeFilterType = routeFilterTypeSymbol.ToDisplayString();
+        var namespaceIndex = routeFilterType.LastIndexOf(".");
+        if (namespaceIndex > 0)
+        {
+            var routeFilterNamespace = routeFilterType.Substring(0, namespaceIndex);
+            routeFilterType = routeFilterType.Substring(namespaceIndex + 1);
+            usings.Add(routeFilterNamespace);
+        }
+
+        extensionsBuilder.Append(@$"\n.AddEndpointFilter<{routeFilterType}>()");
     }
 
     private static string GetMethodParameters(MethodDeclarationSyntax methodDeclaration)
@@ -301,31 +420,6 @@ public class UseRoutesGenerator : IIncrementalGenerator
 
         var parametersString = string.Join(", ", parameters);
         return parametersString;
-    }
-
-    public static string? GetRouteFilterTypeName(SemanticModel semanticModel, AttributeSyntax attributeSyntax)
-    {
-        var routeFilterTypeArgument = attributeSyntax.ArgumentList?.Arguments
-            .FirstOrDefault(arg => arg.NameEquals?.Name.Identifier.Text == Constants.RouteFilterTypePropertyName);
-
-        if (routeFilterTypeArgument is null)
-        {
-            return default;
-        }
-
-        if (routeFilterTypeArgument.Expression is not TypeOfExpressionSyntax typeExpression)
-        {
-            return default;
-        }
-
-        var typeSymbol = semanticModel.GetTypeInfo(typeExpression.Type);
-        if (typeSymbol.Type is INamedTypeSymbol namedTypeSymbol)
-        {
-            // Get the fully qualified name (namespace + type name)
-            return namedTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        }
-
-        return default;
     }
 
     private static T? GetParentOfType<T>(SyntaxNode syntaxNode)
