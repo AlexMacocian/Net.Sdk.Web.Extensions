@@ -34,12 +34,10 @@ public static class WebApplicationExtensions
         where TWebSocketRoute : WebSocketRouteBase
     {
         app.ThrowIfNull();
-        return app.MapGet(route, static async context =>
+        return app.MapGet(route, static async (HttpContext context, ILogger<TWebSocketRoute> logger, TWebSocketRoute route) =>
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                var logger = context.RequestServices.GetRequiredService<ILogger<TWebSocketRoute>>();
-                var route = context.RequestServices.GetRequiredService<TWebSocketRoute>();
                 var routeFilters = GetRouteFilters<TWebSocketRoute>(context).ToList();
 
                 var actionContext = new ActionContext(
