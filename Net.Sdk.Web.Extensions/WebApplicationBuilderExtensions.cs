@@ -3,11 +3,20 @@ using Net.Sdk.Web.Middleware;
 using Net.Sdk.Web.Extensions.Http;
 using System.Core.Extensions;
 using System.Extensions;
+using Net.Sdk.Web.Websockets;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Net.Sdk.Web;
 
 public static class WebApplicationBuilderExtensions
 {
+    public static WebApplicationBuilder WithWebSocketRoute<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(this WebApplicationBuilder builder)
+        where TWebSocketRoute : WebSocketRouteBase
+    {
+        builder.Services.AddScoped<TWebSocketRoute>();
+        return builder;
+    }
+
     public static WebApplicationBuilder ConfigureExtended<TOptions>(this WebApplicationBuilder builder)
         where TOptions : class, new()
     {

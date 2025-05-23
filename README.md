@@ -76,8 +76,9 @@ Net.Sdk.Web.Extensions provides a streamlined implementation of WebSockets to be
 ### Integration into `WebApplication` 
 ```C#
 var builder = WebApplication.CreateSlimBuilder(args);
+builder.WithWebSocketRoute<TWebSocketRoute>();
 var app = builder.Build();
-app.MapWebSocket<CustomRoute>("custom-route");
+app.UseWebSocketRoute<TWebSocketRoute>("custom-route");
 ```
 
 ### Message mapping

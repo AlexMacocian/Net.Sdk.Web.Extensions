@@ -1,4 +1,5 @@
 ﻿using Net.Sdk.Web.Attributes;
+using System.Buffers;
 using System.Core.Extensions;
 using System.Text;
 using System.Text.Json;
@@ -26,7 +27,12 @@ public class JsonWebSocketMessageConverter<T> : WebSocketMessageConverter<T>
             throw new InvalidOperationException($"Unable to deserialize message. Message is not text");
         }
 
-        var stringData = Encoding.UTF8.GetString(request.Payload!);
+        if (request.Payload is null)
+        {
+            throw new InvalidOperationException($"Unable to deserialize message. Payload is null");
+        }
+
+        var stringData = Encoding.UTF8.GetString(request.Payload.Value);
         var objData = JsonSerializer.Deserialize<T>(stringData, this.jsonSerializerOptions);
         return objData ?? throw new InvalidOperationException($"Unable to deserialize message to {typeof(T).Name}");
     }
@@ -35,6 +41,7 @@ public class JsonWebSocketMessageConverter<T> : WebSocketMessageConverter<T>
     {
         var serialized = JsonSerializer.Serialize(message, this.jsonSerializerOptions);
         var data = Encoding.UTF8.GetBytes(serialized);
-        return new WebSocketConverterResponse { EndOfMessage = true, Type = System.Net.WebSockets.WebSocketMessageType.Text, Payload = data };
+        var readOnlySequence = new ReadOnlySequence<byte>(data);
+        return new WebSocketConverterResponse { EndOfMessage = true, Type = System.Net.WebSockets.WebSocketMessageType.Text, Payload = readOnlySequence };
     }
 }

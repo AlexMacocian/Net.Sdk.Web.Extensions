@@ -6,11 +6,14 @@ using System.Core.Extensions;
 using System.Diagnostics.CodeAnalysis;
 using System.Extensions;
 using System.Net.WebSockets;
+using Microsoft.IO;
 
 namespace Net.Sdk.Web.Websockets.Extensions;
 
 public static class WebApplicationExtensions
 {
+    private static readonly RecyclableMemoryStreamManager StreamManager = new();
+
     public static WebApplication UseCorrelationVector(this WebApplication webApplication)
     {
         webApplication.ThrowIfNull()
@@ -27,16 +30,16 @@ public static class WebApplicationExtensions
         return webApplication;
     }
 
-    public static WebApplication MapWebSocket<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(this WebApplication app, string route)
+    public static IEndpointConventionBuilder UseWebSocketRoute<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(this WebApplication app, string route)
         where TWebSocketRoute : WebSocketRouteBase
     {
         app.ThrowIfNull();
-        app.Map(route, async context =>
+        return app.Map(route, async context =>
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                var logger = app.Services.GetRequiredService<ILogger<WebSocketRouteBase>>();
-                var route = GetRoute<TWebSocketRoute>(context);
+                var logger = app.Services.GetRequiredService<ILogger<TWebSocketRoute>>();
+                var route = app.Services.GetRequiredService<TWebSocketRoute>();
                 var routeFilters = GetRouteFilters<TWebSocketRoute>(context).ToList();
 
                 var actionContext = new ActionContext(
@@ -79,8 +82,6 @@ public static class WebApplicationExtensions
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
             }
         });
-
-        return app;
     }
 
     private static async Task ProcessWebSocketRequest(WebSocketRouteBase route, HttpContext httpContext)
@@ -134,16 +135,19 @@ public static class WebApplicationExtensions
 
     private static async Task HandleWebSocket(WebSocket webSocket, WebSocketRouteBase route, CancellationToken cancellationToken)
     {
-        var buffer = new byte[1024];
-        using var memoryStream = new MemoryStream(1024);
+        if (route.Context is null)
+        {
+            throw new InvalidOperationException("Route HttpContext is null");
+        }
+
+        using var ms = StreamManager.GetStream(route.Context.Session.Id);
         ValueWebSocketReceiveResult result;
         while(webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
         {
             do
             {
-                var memory = new Memory<byte>(buffer);
-                result = await webSocket.ReceiveAsync(memory, cancellationToken);
-                await memoryStream.WriteAsync(buffer, 0, result.Count, cancellationToken);
+                var buffer = ms.GetMemory(8 * 1024);
+                result = await webSocket.ReceiveAsync(buffer, cancellationToken);
             } while (!result.EndOfMessage);
 
             if (result.MessageType == WebSocketMessageType.Close)
@@ -151,28 +155,8 @@ public static class WebApplicationExtensions
                 return;
             }
 
-            await route.ExecuteAsync(result.MessageType, memoryStream.ToArray(), cancellationToken);
-            memoryStream.SetLength(0);
+            await route.ExecuteAsync(result.MessageType, ms.GetReadOnlySequence(), cancellationToken);
         }
-    }
-
-    private static WebSocketRouteBase GetRoute<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(HttpContext context)
-        where TWebSocketRoute : WebSocketRouteBase
-    {
-        var constructors = typeof(TWebSocketRoute).GetConstructors();
-        foreach(var constructor in constructors)
-        {
-            var dependencies = constructor.GetParameters().Select(param => context.RequestServices.GetService(param.ParameterType));
-            if (dependencies.Any(d => d is null))
-            {
-                continue;
-            }
-
-            var route = constructor.Invoke(dependencies.ToArray());
-            return route.Cast<WebSocketRouteBase>();
-        }
-
-        throw new InvalidOperationException($"Unable to resolve {typeof(TWebSocketRoute).Name}");
     }
 
     private static IEnumerable<IFilterMetadata> GetRouteFilters<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(HttpContext context)

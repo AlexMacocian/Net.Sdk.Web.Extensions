@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Buffers;
+using System.Text;
 
 namespace Net.Sdk.Web.Websockets.Converters;
 
@@ -11,7 +12,12 @@ public sealed class TextWebSocketMessageConverter : WebSocketMessageConverter<Te
             throw new InvalidOperationException($"Cannot parse message of type {request.Type}");
         }
 
-        var message = Encoding.UTF8.GetString(request.Payload!);
+        if (request.Payload is null)
+        {
+            throw new InvalidOperationException($"Unable to serialize message. Payload is null");
+        }
+
+        var message = Encoding.UTF8.GetString(request.Payload.Value);
         return new TextContent { Text = message };
     }
 
@@ -21,7 +27,7 @@ public sealed class TextWebSocketMessageConverter : WebSocketMessageConverter<Te
         {
             Type = System.Net.WebSockets.WebSocketMessageType.Text,
             EndOfMessage = true,
-            Payload = Encoding.UTF8.GetBytes(message.Text ?? string.Empty)
+            Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(message.Text ?? string.Empty))
         };
     }
 }

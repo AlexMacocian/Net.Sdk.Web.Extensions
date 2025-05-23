@@ -1,4 +1,5 @@
 ﻿using Net.Sdk.Web.Attributes;
+using System.Buffers;
 using System.Extensions;
 using System.Net.WebSockets;
 
@@ -20,7 +21,7 @@ public abstract class WebSocketRouteBase
         return Task.CompletedTask;
     }
 
-    public abstract Task ExecuteAsync(WebSocketMessageType type, byte[] data, CancellationToken cancellationToken);
+    public abstract Task ExecuteAsync(WebSocketMessageType type, ReadOnlySequence<byte> data, CancellationToken cancellationToken);
 }
 
 public abstract class WebSocketRouteBase<TReceiveType> : WebSocketRouteBase
@@ -38,8 +39,13 @@ public abstract class WebSocketRouteBase<TReceiveType> : WebSocketRouteBase
         });
     }
 
-    public sealed override Task ExecuteAsync(WebSocketMessageType type, byte[] data, CancellationToken cancellationToken)
+    public sealed override Task ExecuteAsync(WebSocketMessageType type, ReadOnlySequence<byte> data, CancellationToken cancellationToken)
     {
+        if (this.Context is null)
+        {
+            throw new InvalidOperationException("Route HttpContext is null");
+        }
+
         try
         {
             var objData = this.converter.Value.ConvertToObject(new WebSocketConverterRequest { Type = type, Payload = data }).Cast<TReceiveType>();
@@ -47,7 +53,7 @@ public abstract class WebSocketRouteBase<TReceiveType> : WebSocketRouteBase
         }
         catch (Exception ex)
         {
-            var scoppedLogger = this.Context!.RequestServices.GetRequiredService<ILogger<WebSocketRouteBase<TReceiveType>>>().CreateScopedLogger(nameof(this.ExecuteAsync), string.Empty);
+            var scoppedLogger = this.Context.RequestServices.GetRequiredService<ILogger<WebSocketRouteBase<TReceiveType>>>().CreateScopedLogger(nameof(this.ExecuteAsync), string.Empty);
             scoppedLogger.LogError(ex, "Failed to process data");
             throw;
         }
@@ -99,16 +105,37 @@ public abstract class WebSocketRouteBase<TReceiveType, TSendType> : WebSocketRou
         });
     }
 
-    public Task SendMessage(TSendType sendType, CancellationToken cancellationToken)
+    public async Task SendMessage(TSendType sendType, CancellationToken cancellationToken)
     {
+        _ = sendType ?? throw new ArgumentNullException(nameof(sendType));
+        if (this.WebSocket is null)
+        {
+            throw new InvalidOperationException("Route WebSocket is null");
+        }
+
+        if (this.Context is null)
+        {
+            throw new InvalidOperationException("Route HttpContext is null");
+        }
+
         try
         {
-            var response = this.converter.Value.ConvertFromObject(sendType!);
-            return this.WebSocket!.SendAsync(response.Payload!, response.Type, response.EndOfMessage, cancellationToken);
+            var response = this.converter.Value.ConvertFromObject(sendType);
+            if (response.Payload is null)
+            {
+                throw new InvalidOperationException("Send payload is null");
+            }
+
+            SequencePosition pos = response.Payload.Value.Start;
+            while (response.Payload.Value.TryGet(ref pos, out var memory))
+            {
+                var endOfMessage = pos.Equals(response.Payload.Value.End);
+                await this.WebSocket.SendAsync(memory, response.Type, endOfMessage && response.EndOfMessage, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
-            var scoppedLogger = this.Context!.RequestServices.GetRequiredService<ILogger<WebSocketRouteBase<TReceiveType, TSendType>>>().CreateScopedLogger(nameof(this.SendMessage), string.Empty);
+            var scoppedLogger = this.Context.RequestServices.GetRequiredService<ILogger<WebSocketRouteBase<TReceiveType, TSendType>>>().CreateScopedLogger(nameof(this.SendMessage), string.Empty);
             scoppedLogger.LogError(ex, "Failed to send data");
             throw;
         }
