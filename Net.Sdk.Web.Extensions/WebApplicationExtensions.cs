@@ -34,52 +34,57 @@ public static class WebApplicationExtensions
         where TWebSocketRoute : WebSocketRouteBase
     {
         app.ThrowIfNull();
-        return app.MapGet(route, static async (HttpContext context, ILogger<TWebSocketRoute> logger, TWebSocketRoute route) =>
-        {
-            if (context.WebSockets.IsWebSocketRequest)
-            {
-                var routeFilters = GetRouteFilters<TWebSocketRoute>(context).ToList();
+        return app.MapGet(route, HandleWebSocketRoute<TWebSocketRoute>);
+    }
 
-                var actionContext = new ActionContext(
-                        context,
-                        new RouteData(),
-                        new ActionDescriptor());
-                var actionExecutingContext = new ActionExecutingContext(
-                        actionContext,
-                        routeFilters,
-                        new Dictionary<string, object?>(),
-                        route);
-                var actionExecutedContext = new ActionExecutedContext(
-                        actionContext,
-                        routeFilters,
-                        route);
-                try
-                {
-                    var processingTask = new Func<Task>(() => ProcessWebSocketRequest(route, context));
-                    await BeginProcessingPipeline(actionExecutingContext, actionExecutedContext, processingTask);
-                }
-                catch(WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
-                {
-                    logger.LogInformation("Websocket closed prematurely. Marking as closed");
-                }
-                catch(OperationCanceledException)
-                {
-                    logger.LogInformation("Websocket closed prematurely. Marking as closed");
-                }
-                catch(Exception ex)
-                {
-                    logger.LogError(ex, "Encountered exception while handling websocket. Closing");
-                }
-                finally
-                {
-                    await route.SocketClosed();
-                }
-            }
-            else
-            {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            }
-        });
+    private static async Task<IResult> HandleWebSocketRoute<TWebSocketRoute>(HttpContext context, TWebSocketRoute route, ILogger<TWebSocketRoute> logger)
+        where TWebSocketRoute : WebSocketRouteBase
+    {
+        if (!context.WebSockets.IsWebSocketRequest)
+        {
+            logger.LogError("WebSocket request expected");
+            return Results.BadRequest("WebSocket request expected");
+        }
+
+        var routeFilters = GetRouteFilters<TWebSocketRoute>(context).ToList();
+        var actionContext = new ActionContext(
+                context,
+                new RouteData(),
+                new ActionDescriptor());
+        var actionExecutingContext = new ActionExecutingContext(
+                actionContext,
+                routeFilters,
+                new Dictionary<string, object?>(),
+                route);
+        var actionExecutedContext = new ActionExecutedContext(
+                actionContext,
+                routeFilters,
+                route);
+        try
+        {
+            var processingTask = new Func<Task>(() => ProcessWebSocketRequest(route, context));
+            await BeginProcessingPipeline(actionExecutingContext, actionExecutedContext, processingTask);
+            return Results.Empty;
+        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+        {
+            logger.LogInformation("Websocket closed prematurely. Marking as closed");
+            return Results.Empty;
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogInformation("Websocket closed prematurely. Marking as closed");
+            return Results.Empty;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Encountered exception while handling websocket. Closing");
+            return Results.Empty;
+        }
+        finally
+        {
+            await route.SocketClosed();
+        }
     }
 
     private static async Task ProcessWebSocketRequest(WebSocketRouteBase route, HttpContext httpContext)
