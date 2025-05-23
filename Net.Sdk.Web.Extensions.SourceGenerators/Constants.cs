@@ -107,6 +107,9 @@ public static class Constants
     public const string EndpointDescriptionAttributeName = "EndpointDescriptionAttribute";
     public const string EndpointDescriptionAttributeShortName = "EndpointDescription";
     public const string WithDescriptionExtension = "WithDescription";
+    public const string TagsAttributeName = "TagsAttribute";
+    public const string TagsAttributeShortName = "Tags";
+    public const string WithTagsExtension = "WithTags";
     public const string ProducesAttributeName = "ProducesAttribute";
     public const string ProducesAttributeShortName = "Produces";
     public const string ProducesResponseTypeAttributeName = "ProducesResponseTypeAttribute";

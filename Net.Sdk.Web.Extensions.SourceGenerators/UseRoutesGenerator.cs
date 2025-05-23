@@ -243,6 +243,14 @@ public class UseRoutesGenerator : IIncrementalGenerator
                     Constants.EndpointDescriptionAttributeShortName,
                     Constants.WithDescriptionExtension);
 
+                AddAttributeExtension(
+                    attribute,
+                    attributeSymbol,
+                    extensionsBuilder,
+                    Constants.TagsAttributeName,
+                    Constants.TagsAttributeShortName,
+                    Constants.WithTagsExtension);
+
                 AddAuthorizeExtension(attribute, attributeSymbol, extensionsBuilder);
             }
         }
