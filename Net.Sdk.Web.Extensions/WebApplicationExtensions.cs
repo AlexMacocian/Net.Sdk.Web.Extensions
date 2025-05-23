@@ -34,7 +34,7 @@ public static class WebApplicationExtensions
         where TWebSocketRoute : WebSocketRouteBase
     {
         app.ThrowIfNull();
-        return app.Map(route, async context =>
+        return app.MapGet(route, async context =>
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
@@ -140,7 +140,7 @@ public static class WebApplicationExtensions
             throw new InvalidOperationException("Route HttpContext is null");
         }
 
-        using var ms = StreamManager.GetStream(route.Context.Session.Id);
+        using var ms = StreamManager.GetStream();
         ValueWebSocketReceiveResult result;
         while(webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
         {
