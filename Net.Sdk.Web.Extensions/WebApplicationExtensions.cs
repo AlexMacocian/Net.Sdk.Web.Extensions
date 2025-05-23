@@ -30,16 +30,16 @@ public static class WebApplicationExtensions
         return webApplication;
     }
 
-    public static IEndpointConventionBuilder UseWebSocketRoute<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TWebSocketRoute>(this WebApplication app, string route)
+    public static IEndpointConventionBuilder UseWebSocketRoute<TWebSocketRoute>(this WebApplication app, string route)
         where TWebSocketRoute : WebSocketRouteBase
     {
         app.ThrowIfNull();
-        return app.MapGet(route, async context =>
+        return app.MapGet(route, static async context =>
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                var logger = app.Services.GetRequiredService<ILogger<TWebSocketRoute>>();
-                var route = app.Services.GetRequiredService<TWebSocketRoute>();
+                var logger = context.RequestServices.GetRequiredService<ILogger<TWebSocketRoute>>();
+                var route = context.RequestServices.GetRequiredService<TWebSocketRoute>();
                 var routeFilters = GetRouteFilters<TWebSocketRoute>(context).ToList();
 
                 var actionContext = new ActionContext(
