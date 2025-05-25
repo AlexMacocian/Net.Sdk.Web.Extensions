@@ -34,16 +34,22 @@ public static class WebApplicationExtensions
         where TWebSocketRoute : WebSocketRouteBase
     {
         app.ThrowIfNull();
-        return app.MapGet(route, HandleWebSocketRoute<TWebSocketRoute>);
+        return app.MapGet(route, HandleDeferredWebSocketRoute<TWebSocketRoute>);
     }
 
-    private static async Task<IResult> HandleWebSocketRoute<TWebSocketRoute>(HttpContext context, TWebSocketRoute route, ILogger<TWebSocketRoute> logger)
+    private static DeferredWebSocketResult HandleDeferredWebSocketRoute<TWebSocketRoute>(HttpContext context, TWebSocketRoute route, ILogger<TWebSocketRoute> logger)
+        where TWebSocketRoute : WebSocketRouteBase
+    {
+        return new DeferredWebSocketResult(route, HandleWebSocketRoute(context, route, logger));
+    }
+
+    private static async Task HandleWebSocketRoute<TWebSocketRoute>(HttpContext context, TWebSocketRoute route, ILogger<TWebSocketRoute> logger)
         where TWebSocketRoute : WebSocketRouteBase
     {
         if (!context.WebSockets.IsWebSocketRequest)
         {
             logger.LogError("WebSocket request expected");
-            return Results.BadRequest("WebSocket request expected");
+            return;
         }
 
         var routeFilters = GetRouteFilters<TWebSocketRoute>(context).ToList();
@@ -64,22 +70,18 @@ public static class WebApplicationExtensions
         {
             var processingTask = new Func<Task>(() => ProcessWebSocketRequest(route, context));
             await BeginProcessingPipeline(actionExecutingContext, actionExecutedContext, processingTask);
-            return Results.Empty;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
         {
             logger.LogInformation("Websocket closed prematurely. Marking as closed");
-            return Results.Empty;
         }
         catch (OperationCanceledException)
         {
             logger.LogInformation("Websocket closed prematurely. Marking as closed");
-            return Results.Empty;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Encountered exception while handling websocket. Closing");
-            return Results.Empty;
         }
         finally
         {
