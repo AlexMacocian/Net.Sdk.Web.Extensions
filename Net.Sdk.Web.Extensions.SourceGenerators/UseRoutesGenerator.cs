@@ -76,12 +76,13 @@ public class UseRoutesGenerator : IIncrementalGenerator
         var languageVersion = maybeLanguageVersion.Value;
         var routeUsings = new HashSet<string>
         {
+            Constants.UsingSystemDiagnosticsCodeAnalysis,
+            Constants.UsingSystemRuntimeCompilerServices,
             Constants.UsingSystemThreading,
-            Constants.UsingMicrosoftAspNetCoreRouting,
-            Constants.UsingMicrosoftAspNetCoreHttp,
             Constants.UsingMicrosoftAspNetCoreBuilder,
+            Constants.UsingMicrosoftAspNetCoreHttp,
             Constants.UsingMicrosoftAspNetCoreMvc,
-            Constants.UsingSystemRuntimeCompilerServices
+            Constants.UsingMicrosoftAspNetCoreRouting
         };
 
         var builder = SyntaxBuilder.CreateCompilationUnit();
@@ -188,6 +189,11 @@ public class UseRoutesGenerator : IIncrementalGenerator
 
         useRoutesWebAppBody.AppendLine("return builder;");
         useRoutesWebAppMethodBuilder.WithBody(useRoutesWebAppBody.ToString());
+        useRoutesWebAppMethodBuilder
+            .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.RequiresUnreferencedCode)
+                    .WithArgument(Constants.RequiresUnreferencedCodeMessage))
+            .WithAttribute(SyntaxBuilder.CreateAttribute(Constants.RequiresDynamicCode)
+                    .WithArgument(Constants.RequiresDynamicCodeMessage));
         foreach (var classUsing in routeUsings)
         {
             builder.WithUsing(classUsing);

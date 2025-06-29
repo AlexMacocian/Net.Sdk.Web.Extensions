@@ -18,6 +18,7 @@ public static class Constants
     public const string Namespace = "Net.Sdk.Web";
     public const string UsingSystemThreading = "System.Threading";
     public const string UsingSystemRuntimeCompilerServices = "System.Runtime.CompilerServices";
+    public const string UsingSystemDiagnosticsCodeAnalysis = "System.Diagnostics.CodeAnalysis";
     public const string UsingMicrosoftAspNetCoreHttp = "Microsoft.AspNetCore.Http";
     public const string UsingMicrosoftAspNetCoreRouting = "Microsoft.AspNetCore.Routing";
     public const string UsingMicrosoftAspNetCoreBuilder = "Microsoft.AspNetCore.Builder";
@@ -119,6 +120,11 @@ public static class Constants
 
     public const string RequiresAuthorization = "RequireAuthorization";
     public const string WithOpenApiExtension = "WithOpenApi";
+
+    public const string RequiresUnreferencedCode = "RequiresUnreferencedCode";
+    public const string RequiresUnreferencedCodeMessage = "Uses Map methods (reflection-heavy fall-back)";
+    public const string RequiresDynamicCode = "RequiresDynamicCode";
+    public const string RequiresDynamicCodeMessage = "Minimal-API helper needs dynamic code when RDG is off";
 
     public const string Default200Status = "StatusCodes.Status200OK";
 }
