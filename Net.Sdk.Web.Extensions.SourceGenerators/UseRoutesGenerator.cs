@@ -193,7 +193,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
             builder.WithUsing(classUsing);
         }
 
-        var fileSource = builder.Build().ToFullString();
+        var fileSource = $"#nullable enable\n{builder.Build().ToFullString()}\n#nullable disable";
         sourceProductionContext.AddSource($"{Constants.EndpointRouteBuilderExtensionsName}.g", fileSource);
     }
 
@@ -259,7 +259,6 @@ public class UseRoutesGenerator : IIncrementalGenerator
         {
             var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclarationSyntax);
             AddProducesResponseTypeExtension(methodSymbol, extensionsBuilder);
-            extensionsBuilder.AppendLine($"\n.{Constants.WithOpenApiExtension}()");
         }
 
         /*
