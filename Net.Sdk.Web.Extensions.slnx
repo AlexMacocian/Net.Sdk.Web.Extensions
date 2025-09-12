@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/CODEOWNERS" />
+    <File Path=".github/dependabot.yml" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/cd.yaml" />
+    <File Path=".github/workflows/ci.yaml" />
+    <File Path=".github/workflows/gitlab-mirror.yaml" />
+  </Folder>
+  <Folder Name="/Solution/">
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="Net.Sdk.Web.Extensions.Azure/Net.Sdk.Web.Extensions.Azure.csproj" />
+  <Project Path="Net.Sdk.Web.Extensions.SourceGenerators.Tests/Net.Sdk.Web.Extensions.SourceGenerators.Tests.csproj" />
+  <Project Path="Net.Sdk.Web.Extensions.SourceGenerators/Net.Sdk.Web.Extensions.SourceGenerators.csproj" />
+  <Project Path="Net.Sdk.Web.Extensions/Net.Sdk.Web.Extensions.csproj" />
+</Solution>
