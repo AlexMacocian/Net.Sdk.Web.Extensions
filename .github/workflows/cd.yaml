@@ -22,7 +22,7 @@ jobs:
 
     env:
       Configuration: Release
-      Solution_Path: Net.Sdk.Web.Extensions.sln
+      Solution_Path: Net.Sdk.Web.Extensions.slnx
       Source_Project_Path: Net.Sdk.Web.Extensions\Net.Sdk.Web.Extensions.csproj
       Azure_Project_path: Net.Sdk.Web.Extensions.Azure\Net.Sdk.Web.Extensions.Azure.csproj
       SourceGenerators_Project_path: Net.Sdk.Web.Extensions.SourceGenerators\Net.Sdk.Web.Extensions.SourceGenerators.csproj

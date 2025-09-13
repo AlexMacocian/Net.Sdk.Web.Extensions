@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      Solution_Path: Net.Sdk.Web.Extensions.sln
+      Solution_Path: Net.Sdk.Web.Extensions.slnx
       Source_Project_Path: Net.Sdk.Web.Extensions\Net.Sdk.Web.Extensions.csproj
       Azure_Project_path: Net.Sdk.Web.Extensions.Azure\Net.Sdk.Web.Extensions.Azure.csproj
       Actions_Allow_Unsecure_Commands: true
