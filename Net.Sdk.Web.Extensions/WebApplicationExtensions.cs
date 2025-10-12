@@ -1,12 +1,13 @@
-﻿using Net.Sdk.Web.Middleware;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IO;
+using Net.Sdk.Web.Middleware;
+using System.Buffers;
 using System.Core.Extensions;
 using System.Diagnostics.CodeAnalysis;
 using System.Extensions;
 using System.Net.WebSockets;
-using Microsoft.IO;
 
 namespace Net.Sdk.Web.Websockets.Extensions;
 
@@ -149,10 +150,20 @@ public static class WebApplicationExtensions
         ValueWebSocketReceiveResult result;
         while(webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
         {
+            ms.Position = 0;
             do
             {
-                var buffer = ms.GetMemory(8 * 1024);
-                result = await webSocket.ReceiveAsync(buffer, cancellationToken);
+                var byteArray = ArrayPool<byte>.Shared.Rent(4 * 1024);
+                var buffer = new Memory<byte>(byteArray);
+                try
+                {
+                    result = await webSocket.ReceiveAsync(buffer, cancellationToken);
+                    ms.Write(buffer[..result.Count].Span);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(byteArray);
+                }
             } while (!result.EndOfMessage);
 
             if (result.MessageType == WebSocketMessageType.Close)
