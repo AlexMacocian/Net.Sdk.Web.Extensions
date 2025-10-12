@@ -151,6 +151,7 @@ public static class WebApplicationExtensions
         while(webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
         {
             ms.Position = 0;
+            var totalRead = 0;
             do
             {
                 var byteArray = ArrayPool<byte>.Shared.Rent(4 * 1024);
@@ -158,6 +159,7 @@ public static class WebApplicationExtensions
                 try
                 {
                     result = await webSocket.ReceiveAsync(buffer, cancellationToken);
+                    totalRead += result.Count;
                     ms.Write(buffer[..result.Count].Span);
                 }
                 finally
@@ -171,7 +173,7 @@ public static class WebApplicationExtensions
                 return;
             }
 
-            await route.ExecuteAsync(result.MessageType, ms.GetReadOnlySequence(), cancellationToken);
+            await route.ExecuteAsync(result.MessageType, ms.GetReadOnlySequence().Slice(0, totalRead), cancellationToken);
         }
     }
 
