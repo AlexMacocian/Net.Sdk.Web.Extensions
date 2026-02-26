@@ -414,7 +414,7 @@ public class UseRoutesGenerator : IIncrementalGenerator
             usings.Add(routeFilterNamespace);
         }
 
-        extensionsBuilder.Append(@$"\n.AddEndpointFilter<{routeFilterType}>()");
+        extensionsBuilder.Append($"\n.AddEndpointFilter<{routeFilterType}>()");
     }
 
     private static string GetMethodParameters(MethodDeclarationSyntax methodDeclaration)
